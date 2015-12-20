@@ -27,10 +27,6 @@ class StackableFinder
 	}
 
 	public function find($type = 'all', $query = []) {
-		if (strtolower($type) === 'stack') {
-			return $this;
-		}
-
 		$method = '_find' . ucfirst($type);
 		if (method_exists($this->Model, $method)) {
 			$method = new ReflectionMethod($this->Model, $method);
@@ -39,18 +35,22 @@ class StackableFinder
 
 		foreach ($this->query as $key => $val) {
 			if (isset($query[$key])) {
-				switch ($key) {
-					case 'conditions':
-						$this->query[$key] = ['AND'=>[$this->query[$key], $query[$key]]];
-						break;
-					case 'limit':
-					case 'offset':
-					case 'page':
-						$this->query[$key] = $query[$key];
-						break;
-					default:
-						$this->query[$key] = array_merge((array)$this->query[$key], (array)$query[$key]);
-						break;
+				if ($this->query[$key] === null) {
+					$this->query[$key] = $query[$key];
+				} else {
+					switch ($key) {
+						case 'conditions':
+							$this->query[$key] = ['AND'=>[$this->query[$key], $query[$key]]];
+							break;
+						case 'limit':
+						case 'offset':
+						case 'page':
+							$this->query[$key] = $query[$key];
+							break;
+						default:
+							$this->query[$key] = array_merge((array)$this->query[$key], (array)$query[$key]);
+							break;
+					}
 				}
 			}
 		}
