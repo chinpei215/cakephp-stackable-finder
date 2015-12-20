@@ -41,7 +41,7 @@ class StackableFinder
 			if (isset($query[$key])) {
 				switch ($key) {
 					case 'conditions':
-						$this->query[$key] = ['AND'=>[$this->query[$key], $conditions]];
+						$this->query[$key] = ['AND'=>[$this->query[$key], $query[$key]]];
 						break;
 					case 'limit':
 					case 'offset':
