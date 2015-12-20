@@ -26,7 +26,7 @@ class StackableFinder
 		throw new CakeException(__d('cake_dev', 'Method %1$s::%2$s does not exist', get_class($this), $name));
 	}
 
-	public function find($type = 'first', $query = []) {
+	public function find($type = 'all', $query = []) {
 		if (strtolower($type) === 'stack') {
 			return $this;
 		}
