@@ -1,0 +1,14 @@
+{
+	"name": "chinpei215/cakephp-stackable-finder",
+	"description": "CakePHP 2.x plugin to make it possible to stack custom finders",
+	"type": "cakephp-plugin",
+	"keywords": ["cakephp", "stack", "custom", "finders"],
+	"homepage": "https://github.com/chinpei215/cakephp-stackable-finder",
+	"license": "MIT",
+	"require": {
+		"composer/installers": "*"
+	},
+	"extra": {
+		"installer-name": "StackableFinder"
+	}
+}
