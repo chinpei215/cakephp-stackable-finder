@@ -37,14 +37,16 @@ class StackableFinder {
  * @throws BadMethodCallException
  */
 	public function __call($name, $args) {
-		if (preg_match('/^find(\w+)By(.+)/', $name)) {
+		if (preg_match('/^find(\w*)By(.+)/', $name)) {
 			$db = $this->Model->getDataSource();
 			if ($db instanceof DboSource) {
 				$this->alias = $this->Model->alias; // Hack for DboSource::query()
 				return $db->query($name, $args, $this);
+			} else {
+				throw new BadMethodCallException(sprintf('Datasource %s does not support magic find', get_class($db)));
 			}
 		}
-		throw new BadMethodCallException(__d('cake_dev', 'Method %1$s::%2$s does not exist', get_class($this), $name));
+		throw new BadMethodCallException(sprintf('Method %s::%s does not exist', get_class($this), $name));
 	}
 
 /**

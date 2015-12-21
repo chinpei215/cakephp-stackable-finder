@@ -154,7 +154,7 @@ class StackableFinderTest extends CakeTestCase {
  * @return void
  */
 	public function testStackingMagicFinders() {
-		$Article = $this->getMockForModel('Article', array('_findAll'));
+		$Article = $this->getMockForModel('Article', array('_findAll', '_findFirst'));
 
 		$finder = new StackableFinder($Article);
 
@@ -175,7 +175,7 @@ class StackableFinderTest extends CakeTestCase {
 			'conditions' => array(
 				'AND' => array(
 					array('Article.published' => 1),
-					array('Article.user_id' => 2),
+					array('Article.id' => 2),
 				)
 			),
 			'fields' => null, 'joins' => array(), 'limit' => null, 'offset' => null,
@@ -183,11 +183,11 @@ class StackableFinderTest extends CakeTestCase {
 			'recursive' => null,
 		);
 		$Article->expects($this->at(1))
-			->method('_findAll')
+			->method('_findFirst')
 			->with('before', $query)
 			->will($this->returnArgument(1));
 
-		$finder->findAllByPublished(1)->findAllByUserId(2);
+		$finder->findAllByPublished(1)->findById(2);
 	}
 
 /**
@@ -224,7 +224,20 @@ class StackableFinderTest extends CakeTestCase {
  * @expectedExceptionMessage Method StackableFinder::foo does not exist
  * @return void
  */
-	public function testBadMethodCallException() {
+	public function testBadMethodCall() {
 		$this->StackableFinder->foo();
+	}
+
+/**
+ * Test that magic find is unavaiable on other datasources
+ *
+ * @expectedException BadMethodCallException
+ * @expectedExceptionMessage Datasource DataSource does not support magic find
+ * @return void
+ */
+	public function testMagicFindUnavailable() {
+		ConnectionManager::create('dummy', ['datasource' => 'DataSource']);
+		$finder = new StackableFinder(new AppModel(false, false, 'dummy'));
+		$finder->findById(1);
 	}
 }
