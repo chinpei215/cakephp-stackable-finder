@@ -51,23 +51,23 @@ class StackableFinderBehaviorTest extends CakeTestCase {
  *
  */
 	public function testFindPublishedFirst() {
-		$expected = [
-			'Article' => [
+		$expected = array(
+			'Article' => array(
 				'id' => 1,
 				'title' => 'Article #1',
-			]
-		];
+			)
+		);
 
 		$results = $this->Article
 			->do()
-				->find('published', ['fields'=>['id', 'title']])
+				->find('published', array('fields'=>array('id', 'title')))
 				->find('first')
 			->done();
 		$this->assertEquals($expected, $results);
 
 		$results = $this->Article
 			->do()
-				->find('published', ['fields'=>['id', 'title']])
+				->find('published', array('fields'=>array('id', 'title')))
 				->first();
 		$this->assertEquals($expected, $results);
 	}
@@ -96,10 +96,10 @@ class StackableFinderBehaviorTest extends CakeTestCase {
  *
  */
 	public function testFindPublishedList() {
-		$expected = [
+		$expected = array(
 			'1' => 'Article #1',
 			'3' => 'Article #3',
-		];
+		);
 
 		$results = $this->Article
 			->do()

@@ -1,5 +1,5 @@
 <?php
 class Article extends AppModel
 {
-	public $actsAs = ['Publishable'];
+	public $actsAs = array('Publishable');
 }
