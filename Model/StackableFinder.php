@@ -23,7 +23,7 @@ class StackableFinder
 				return $db->query($name, $args, $this);
 			}
 		}
-		throw new CakeException(__d('cake_dev', 'Method %1$s::%2$s does not exist', get_class($this), $name));
+		throw new BadMethodCallException(__d('cake_dev', 'Method %1$s::%2$s does not exist', get_class($this), $name));
 	}
 
 	public function find($type = 'all', $query = []) {
@@ -62,25 +62,22 @@ class StackableFinder
 	}
 
 	public function toArray() {
-		return (array)$this->end();
+		return (array)$this->done();
 	}
 
 	public function count() {
 		$this->find('count');
-		return $this->end();
+		return $this->done();
 	}
 
 	public function first() {
 		$this->find('first');
-		return $this->end();
+		return $this->done();
 	}
 
-	public function end() {
+	public function done() {
 		$results = $this->Model->find('all', $this->query);
 		foreach ($this->stack as $method) {
-			if ($method instanceof ReflectionMethod && $method->name === '_findFirst') {
-				$results = array_values($results); // Make sure the first record to be fetched.
-			}
 			$results = $this->invoke($method, ['after', $this->query, $results]);
 		}
 		return $results;
