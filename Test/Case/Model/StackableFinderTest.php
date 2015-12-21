@@ -236,7 +236,7 @@ class StackableFinderTest extends CakeTestCase {
  * @return void
  */
 	public function testMagicFindUnavailable() {
-		ConnectionManager::create('dummy', ['datasource' => 'DataSource']);
+		ConnectionManager::create('dummy', array('datasource' => 'DataSource'));
 		$finder = new StackableFinder(new AppModel(false, false, 'dummy'));
 		$finder->findById(1);
 	}
