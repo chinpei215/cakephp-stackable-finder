@@ -8,6 +8,7 @@ App::uses('StackableFinder', 'StackableFinder.Model');
  * StackableFinderBehavior Test Case
  */
 class StackableFinderBehaviorTest extends CakeTestCase {
+
 /**
  * Fixtures
  *
@@ -40,15 +41,18 @@ class StackableFinderBehaviorTest extends CakeTestCase {
 	}
 
 /**
- * 
+ * Test do
+ *
+ * @return void
  */
-	public function testDoStacking() {
-		$this->assertInstanceOf('StackableFinder', $this->Article->doStacking());
+	public function testDo() {
 		$this->assertInstanceOf('StackableFinder', $this->Article->do());
 	}
 
 /**
+ * Test a combination of published and first
  *
+ * @return void
  */
 	public function testFindPublishedFirst() {
 		$expected = array(
@@ -60,20 +64,22 @@ class StackableFinderBehaviorTest extends CakeTestCase {
 
 		$results = $this->Article
 			->do()
-				->find('published', array('fields'=>array('id', 'title')))
+				->find('published', array('fields' => array('id', 'title')))
 				->find('first')
 			->done();
 		$this->assertEquals($expected, $results);
 
 		$results = $this->Article
 			->do()
-				->find('published', array('fields'=>array('id', 'title')))
+				->find('published', array('fields' => array('id', 'title')))
 				->first();
 		$this->assertEquals($expected, $results);
 	}
 
 /**
+ * Test a combination of published and count
  *
+ * @return void
  */
 	public function testFindPublishedCount() {
 		$expected = 2;
@@ -93,7 +99,9 @@ class StackableFinderBehaviorTest extends CakeTestCase {
 	}
 
 /**
+ * Test a combination of published and list
  *
+ * @return void
  */
 	public function testFindPublishedList() {
 		$expected = array(

@@ -7,6 +7,7 @@ App::uses('StackableFinder', 'StackableFinder.Model');
  * StackableFinder Test Case
  */
 class StackableFinderTest extends CakeTestCase {
+
 /**
  * Fixtures
  *
@@ -54,17 +55,16 @@ class StackableFinderTest extends CakeTestCase {
 			'fields' => null,
 			'joins' => array(),
 			'limit' => null,
-			'offset' => null, 
+			'offset' => null,
 			'order' => null,
-			'page' => 1, 
+			'page' => 1,
 			'group' => null,
 			'callbacks' => true,
 		);
 		$Article->expects($this->at(0))
 			->method('_findX')
 			->with('before', $query)
-			->will($this->returnArgument(1))
-			;
+			->will($this->returnArgument(1));
 
 		// Second
 		$query = array(
@@ -74,15 +74,15 @@ class StackableFinderTest extends CakeTestCase {
 					array('created >=' => '2001-01-01')
 				),
 			),
-			'fields' => null, 
-			'joins' => array(), 
+			'fields' => null,
+			'joins' => array(),
 			'limit' => 10,
 			'offset' => null,
 			'order' => array(
 				'published' => 'asc',
 			),
 			'page' => 1,
-			'group' => null, 
+			'group' => null,
 			'callbacks' => true,
 		);
 		$Article->expects($this->at(1))
@@ -103,7 +103,7 @@ class StackableFinderTest extends CakeTestCase {
 					array('created >=' => '2002-02-02'),
 				),
 			),
-			'fields' => null, 
+			'fields' => null,
 			'joins' => array(),
 			'limit' => 20, // Should be overwritten
 			'offset' => null,
@@ -112,7 +112,7 @@ class StackableFinderTest extends CakeTestCase {
 				'id' => 'asc',
 			),
 			'page' => 1,
-			'group' => null, 
+			'group' => null,
 			'callbacks' => true,
 		);
 		$Article->expects($this->at(2))
@@ -143,8 +143,8 @@ class StackableFinderTest extends CakeTestCase {
 
 		$finder
 			->find('x', array('conditions' => '1 = 1'))
-			->find('y', array('conditions' => array('created >=' => '2001-01-01'), 'limit'=>10, 'order' => array('published' => 'asc')))
-			->find('z', array('conditions' => array('created >=' => '2002-02-02'), 'limit'=>20, 'order' => array('id' => 'asc')))
+			->find('y', array('conditions' => array('created >=' => '2001-01-01'), 'limit' => 10, 'order' => array('published' => 'asc')))
+			->find('z', array('conditions' => array('created >=' => '2002-02-02'), 'limit' => 20, 'order' => array('id' => 'asc')))
 			->done();
 	}
 
@@ -163,7 +163,7 @@ class StackableFinderTest extends CakeTestCase {
 				'Article.published' => 1,
 			),
 			'fields' => null, 'joins' => array(), 'limit' => null, 'offset' => null,
-			'order' => null, 'page' => 1, 'group' => null, 'callbacks' => true, 
+			'order' => null, 'page' => 1, 'group' => null, 'callbacks' => true,
 			'recursive' => null,
 		);
 		$Article->expects($this->at(0))
@@ -179,7 +179,7 @@ class StackableFinderTest extends CakeTestCase {
 				)
 			),
 			'fields' => null, 'joins' => array(), 'limit' => null, 'offset' => null,
-			'order' => null, 'page' => 1, 'group' => null, 'callbacks' => true, 
+			'order' => null, 'page' => 1, 'group' => null, 'callbacks' => true,
 			'recursive' => null,
 		);
 		$Article->expects($this->at(1))
@@ -206,7 +206,7 @@ class StackableFinderTest extends CakeTestCase {
 				'Article.published' => 1,
 			),
 			'fields' => null, 'joins' => array(), 'limit' => null, 'offset' => null,
-			'order' => null, 'page' => 1, 'group' => null, 'callbacks' => true, 
+			'order' => null, 'page' => 1, 'group' => null, 'callbacks' => true,
 		);
 		$Article->expects($this->at(0))
 			->method('_findAll')
@@ -218,8 +218,11 @@ class StackableFinderTest extends CakeTestCase {
 	}
 
 /**
+ * Tests that calling an inexistent method throws an exception
+ *
  * @expectedException BadMethodCallException
  * @expectedExceptionMessage Method StackableFinder::foo does not exist
+ * @return void
  */
 	public function testBadMethodCallException() {
 		$this->StackableFinder->foo();
