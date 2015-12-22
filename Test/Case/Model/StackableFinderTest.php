@@ -266,11 +266,17 @@ class StackableFinderTest extends CakeTestCase {
 	}
 
 /**
- * Tests that beforeFind/afterFind events are triggered
+ * Tests that beforeFind/afterFind events are triggered or not
+ *
+ * @dataProvider dataProviderForTestEventTriggering
+ * 
+ * @param mixed $callbacks Type of `callbacks` options
+ * @param int $before Expected number of `beforeFind` calls
+ * @param int $after Expected number of `afterFind` calls
  *
  * @return void
  */
-	public function testEventTriggering() {
+	public function testEventTriggering($callbacks, $before, $after) {
 		$db = $this->getMock('DataSource', array('read'));
 		$db->expects($this->once())
 			->method('read')
@@ -281,14 +287,28 @@ class StackableFinderTest extends CakeTestCase {
 			->method('getDataSource')
 			->will($this->returnValue($db));
 
-		$Article->expects($this->once())
+		$Article->expects($this->exactly($before))
 			->method('beforeFind');
 
-		$Article->expects($this->once())
+		$Article->expects($this->exactly($after))
 			->method('afterFind');
 
 		$finder = new StackableFinder($Article);
-		$finder->find('all')->find('all')->done();
+		$finder->find('all', array('callbacks' => $callbacks))->find('all')->done();
+	}
+
+/**
+ * Data provider for testEventTriggering
+ *
+ * @return array
+ */
+	public function dataProviderForTestEventTriggering() {
+		return array(
+			array(true, 1, 1),
+			array(false, 0, 0),
+			array('before', 1, 0),
+			array('after', 0, 1),
+		);
 	}
 
 /**

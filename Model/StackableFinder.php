@@ -77,6 +77,7 @@ class StackableFinder {
 						case 'limit':
 						case 'offset':
 						case 'page':
+						case 'callbacks':
 							$this->query[$key] = $query[$key];
 							break;
 						default:
