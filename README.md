@@ -34,7 +34,7 @@ Note that you cannot stack `find('first')` after `find('list')`:
 $articles = $this->Article
 	->do()
 		->find('list')
-		->first('first')
+		->find('first')
 	->done();
 ```
 Probably, you would get an unexpected result. Because `_findFirst` doen't returns the _first_ result actually. That returns the element with index zero.
