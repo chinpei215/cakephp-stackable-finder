@@ -15,7 +15,8 @@ class StackableFinderBehaviorTest extends CakeTestCase {
  * @var array
  */
 	public $fixtures = array(
-		'plugin.stackable_finder.article',
+		'core.article',
+		'core.comment',
 	);
 
 /**
@@ -25,8 +26,9 @@ class StackableFinderBehaviorTest extends CakeTestCase {
  */
 	public function setUp() {
 		parent::setUp();
+
 		$this->Article = ClassRegistry::init('Article');
-		$this->Article->Behaviors->attach('StackableFinder.StackableFinder');
+		$this->Comment = ClassRegistry::init('Comment');
 	}
 
 /**
@@ -35,7 +37,7 @@ class StackableFinderBehaviorTest extends CakeTestCase {
  * @return void
  */
 	public function tearDown() {
-		unset($this->Article);
+		unset($this->Article, $this->Comment);
 
 		parent::tearDown();
 	}
@@ -58,7 +60,7 @@ class StackableFinderBehaviorTest extends CakeTestCase {
 		$expected = array(
 			'Article' => array(
 				'id' => 1,
-				'title' => 'Article #1',
+				'title' => 'First Article',
 			)
 		);
 
@@ -82,16 +84,16 @@ class StackableFinderBehaviorTest extends CakeTestCase {
  * @return void
  */
 	public function testFindPublishedCount() {
-		$expected = 2;
+		$expected = 5;
 
-		$results = $this->Article
+		$results = $this->Comment
 			->do()
 				->find('published')
 				->find('count')
 			->done();
 		$this->assertEquals($expected, $results);
 
-		$results = $this->Article
+		$results = $this->Comment
 			->do()
 				->find('published')
 				->count();
@@ -105,18 +107,21 @@ class StackableFinderBehaviorTest extends CakeTestCase {
  */
 	public function testFindPublishedList() {
 		$expected = array(
-			'1' => 'Article #1',
-			'3' => 'Article #3',
+			1 => 'First Comment for First Article',
+			2 => 'Second Comment for First Article',
+			3 => 'Third Comment for First Article',
+			5 => 'First Comment for Second Article',
+			6 => 'Second Comment for Second Article',
 		);
 
-		$results = $this->Article
+		$results = $this->Comment
 			->do()
 				->find('published')
 				->find('list')
 			->done();
 		$this->assertEquals($expected, $results);
 
-		$results = $this->Article
+		$results = $this->Comment
 			->do()
 				->find('published')
 				->find('list')

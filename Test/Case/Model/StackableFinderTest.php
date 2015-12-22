@@ -14,7 +14,7 @@ class StackableFinderTest extends CakeTestCase {
  * @var array
  */
 	public $fixtures = array(
-		'plugin.stackable_finder.article',
+		'core.article',
 	);
 
 /**
@@ -160,7 +160,7 @@ class StackableFinderTest extends CakeTestCase {
 
 		$query = array(
 			'conditions' => array(
-				'Article.published' => 1,
+				'Article.published' => 'Y',
 			),
 			'fields' => null, 'joins' => array(), 'limit' => null, 'offset' => null,
 			'order' => null, 'page' => 1, 'group' => null, 'callbacks' => true,
@@ -174,7 +174,7 @@ class StackableFinderTest extends CakeTestCase {
 		$query = array(
 			'conditions' => array(
 				'AND' => array(
-					array('Article.published' => 1),
+					array('Article.published' => 'Y'),
 					array('Article.id' => 2),
 				)
 			),
@@ -187,7 +187,7 @@ class StackableFinderTest extends CakeTestCase {
 			->with('before', $query)
 			->will($this->returnArgument(1));
 
-		$finder->findAllByPublished(1)->findById(2);
+		$finder->findAllByPublished('Y')->findById(2);
 	}
 
 /**
@@ -203,7 +203,7 @@ class StackableFinderTest extends CakeTestCase {
 
 		$query = array(
 			'conditions' => array(
-				'Article.published' => 1,
+				'Article.published' => 'Y',
 			),
 			'fields' => null, 'joins' => array(), 'limit' => null, 'offset' => null,
 			'order' => null, 'page' => 1, 'group' => null, 'callbacks' => true,

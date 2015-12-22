@@ -21,7 +21,7 @@ class PublishableBehavior extends ModelBehavior {
  */
 	public function _findPublished(Model $Model, $method, $state, $query, $results = array()) { // @codingStandardsIgnoreLine
 		if ($state === 'before') {
-			$query['conditions'][$Model->alias . '.published'] = 1;
+			$query['conditions'][$Model->alias . '.published'] = 'Y';
 			return $query;
 		}
 		return $results;
