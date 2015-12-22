@@ -94,15 +94,6 @@ class StackableFinder {
 	}
 
 /**
- * 3.x compatible. Same as `(array)$finder->done()`.
- *
- * @return array
- */
-	public function toArray() {
-		return (array)$this->done();
-	}
-
-/**
  *  3.x compatible. Same as `$finder->find('first')->done()`.
  *
  * @return mixed

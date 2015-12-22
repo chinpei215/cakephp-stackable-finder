@@ -65,7 +65,6 @@ class StackableFinderTest extends CakeTestCase {
  */
 	public function testStackingFinders() {
 		$Article = $this->Article;
-		$finder = $this->StackableFinder;
 
 		// First
 		$query = array(
@@ -159,7 +158,7 @@ class StackableFinderTest extends CakeTestCase {
 			->with('after', $this->isType('array'), $results)
 			->will($this->returnValue($results));
 
-		$finder
+		$this->StackableFinder
 			->find('all', array('conditions' => '1 = 1'))
 			->find('list', array('conditions' => array('created >=' => '2001-01-01'), 'limit' => 10, 'order' => array('published' => 'asc')))
 			->find('first', array('conditions' => array('created >=' => '2002-02-02'), 'limit' => 20, 'order' => array('id' => 'asc')))
@@ -173,7 +172,6 @@ class StackableFinderTest extends CakeTestCase {
  */
 	public function testStackingMagicFinders() {
 		$Article = $this->Article;
-		$finder = $this->StackableFinder;
 
 		$query = array(
 			'conditions' => array(
@@ -204,7 +202,7 @@ class StackableFinderTest extends CakeTestCase {
 			->with('before', $query)
 			->will($this->returnArgument(1));
 
-		$finder->findAllByPublished('Y')->findById(2);
+		$this->StackableFinder->findAllByPublished('Y')->findById(2);
 	}
 
 /**
@@ -214,7 +212,6 @@ class StackableFinderTest extends CakeTestCase {
  */
 	public function testStackingMappedFinders() {
 		$Article = $this->Article;
-		$finder = new StackableFinder($Article);
 
 		$query = array(
 			'conditions' => array(
@@ -229,7 +226,7 @@ class StackableFinderTest extends CakeTestCase {
 			->will($this->returnArgument(1));
 
 		$this->assertFalse(method_exists($Article, '_findPublished'));
-		$finder->find('published')->find('all');
+		$this->StackableFinder->find('published')->find('all');
 	}
 
 /**
@@ -245,8 +242,7 @@ class StackableFinderTest extends CakeTestCase {
 			->will($this->returnValue($finder));
 
 		$finder->expects($this->at(1))
-			->method('done')
-			->with();
+			->method('done');
 
 		$finder->first();
 	}
@@ -264,24 +260,35 @@ class StackableFinderTest extends CakeTestCase {
 			->will($this->returnValue($finder));
 
 		$finder->expects($this->at(1))
-			->method('done')
-			->with();
+			->method('done');
 
 		$finder->count();
 	}
 
 /**
- * Tests count method
+ * Tests that beforeFind/afterFind events are triggered
  *
  * @return void
  */
-	public function testToArray() {
-		$finder = $this->getMock('StackableFinder', array('find', 'done'), array($this->Article));
-		$finder->expects($this->at(0))
-			->method('done')
-			->with();
+	public function testEventTriggering() {
+		$db = $this->getMock('DataSource', array('read'));
+		$db->expects($this->once())
+			->method('read')
+			->will($this->returnValue(array()));
 
-		$finder->toArray();
+		$Article = $this->getMockForModel('Article', array('getDataSource', 'beforeFind', 'afterFind'), array('table' => false));
+		$Article->expects($this->any())
+			->method('getDataSource')
+			->will($this->returnValue($db));
+
+		$Article->expects($this->once())
+			->method('beforeFind');
+
+		$Article->expects($this->once())
+			->method('afterFind');
+
+		$finder = new StackableFinder($Article);
+		$finder->find('all')->find('all')->done();
 	}
 
 /**

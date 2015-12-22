@@ -13,7 +13,7 @@
 
 * Put `StackableFinder` directory into your plugin directory. You can also install via Composer.
 * Enable `StackableFinder` plugin in your `app/Config/bootstrap.php` file.
-* Enable `StackableFinder.StackableFinder` behavior in your Model.
+* Enable `StackableFinder.StackableFinder` behavior in your model.
 
 ## Usage
 
@@ -29,22 +29,24 @@ $articles = $this->Article
 ```
 And by calling `done`, you can execute the query and get the resutls.
 
-Note that you cannot stack `find('first')` after `find('list')`:
+For compatibility and convenience, you can use `first` or `count` instead of `done`.
 ```php
 $articles = $this->Article
 	->do()
-		->find('list')
+		->find('published')
+		->first();
+```
+This is same as the following:
+```php
+$articles = $this->Article
+	->do()
+		->find('published')
 		->find('first')
 	->done();
 ```
-Probably, you would get an unexpected result. Because `_findFirst` doen't returns the _first_ result actually. That returns the element with index zero.
-You can override `_findFirst` in your Model to change this behavior, if necessary.
 
-For 3.x compatibility, you can use `toArray` or `first` or `count` instead of `done`.
-```php
-$articles = $this->Article
-	->do()
-		->find('list')
-		->toArray();
-```
-Note that you cannot use `all` because we have no Collection class.
+## Limitation
+
+Note that stacking `first` after `list` doen't work as you expected. Because `_findFirst` doen't returns the _first_ result actually. That returns the element with index `0`.
+Also note that stacking `count` after `list` doesn't work. Because `_findCount` expects an array like `[['Model' => ['count' => N ]]]`, but `_findList` changes the array before it called. 
+You can override them in your model to change the behaviors, if necessary.
