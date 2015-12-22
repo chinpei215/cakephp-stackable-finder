@@ -10,11 +10,19 @@ App::uses('StackableFinder', 'StackableFinder.Model');
 class StackableFinderBehaviorTest extends CakeTestCase {
 
 /**
+ * autoFixtures property
+ *
+ * @var bool
+ */
+	public $autoFixtures = false;
+
+/**
  * Fixtures
  *
  * @var array
  */
 	public $fixtures = array(
+		'core.user',
 		'core.article',
 		'core.comment',
 	);
@@ -26,9 +34,6 @@ class StackableFinderBehaviorTest extends CakeTestCase {
  */
 	public function setUp() {
 		parent::setUp();
-
-		$this->Article = ClassRegistry::init('Article');
-		$this->Comment = ClassRegistry::init('Comment');
 	}
 
 /**
@@ -37,75 +42,71 @@ class StackableFinderBehaviorTest extends CakeTestCase {
  * @return void
  */
 	public function tearDown() {
-		unset($this->Article, $this->Comment);
-
 		parent::tearDown();
 	}
 
 /**
- * Test do
+ * Tests do
  *
  * @return void
  */
 	public function testDo() {
-		$this->assertInstanceOf('StackableFinder', $this->Article->do());
+		$Article = ClassRegistry::init('Article');
+		$this->assertInstanceOf('StackableFinder', $Article->do());
 	}
 
 /**
- * Test a combination of published and first
+ * Tests a combination of published and first
  *
  * @return void
  */
-	public function testFindPublishedFirst() {
+	public function testPublishedFirst() {
+		$this->loadFixtures('Article');
+		$Article = ClassRegistry::init('Article');
+
 		$expected = array(
 			'Article' => array(
-				'id' => 1,
+				'id' => '1',
 				'title' => 'First Article',
 			)
 		);
 
-		$results = $this->Article
+		$results = $Article
 			->do()
 				->find('published', array('fields' => array('id', 'title')))
 				->find('first')
 			->done();
-		$this->assertEquals($expected, $results);
 
-		$results = $this->Article
-			->do()
-				->find('published', array('fields' => array('id', 'title')))
-				->first();
 		$this->assertEquals($expected, $results);
 	}
 
 /**
- * Test a combination of published and count
+ * Tests a combination of published and count
  *
  * @return void
  */
-	public function testFindPublishedCount() {
+	public function testPublishedCount() {
+		$this->loadFixtures('Comment');
+		$Comment = ClassRegistry::init('Comment');
+
 		$expected = 5;
 
-		$results = $this->Comment
+		$results = $Comment
 			->do()
 				->find('published')
 				->find('count')
 			->done();
 		$this->assertEquals($expected, $results);
-
-		$results = $this->Comment
-			->do()
-				->find('published')
-				->count();
-		$this->assertEquals($expected, $results);
 	}
 
 /**
- * Test a combination of published and list
+ * Tests a combination of published and list
  *
  * @return void
  */
 	public function testFindPublishedList() {
+		$this->loadFixtures('Comment');
+		$Comment = ClassRegistry::init('Comment');
 		$expected = array(
 			1 => 'First Comment for First Article',
 			2 => 'Second Comment for First Article',
@@ -114,18 +115,68 @@ class StackableFinderBehaviorTest extends CakeTestCase {
 			6 => 'Second Comment for Second Article',
 		);
 
-		$results = $this->Comment
+		$results = $Comment
 			->do()
 				->find('published')
 				->find('list')
 			->done();
 		$this->assertEquals($expected, $results);
+	}
 
-		$results = $this->Comment
+/**
+ * Tests contain
+ *
+ * @return void
+ */
+	public function testContain() {
+		$this->loadFixtures('Article', 'Comment', 'User');
+		$Article = ClassRegistry::init('Article');
+
+		$expected = array(
+			'Article' => array(
+				'id' => '1',
+				'user_id' => '1',
+				'title' => 'First Article'
+			),
+			'User' => array(
+				'id' => '1',
+				'user' => 'mariano'
+			),
+			'Comment' => array(
+				0 => array(
+					'id' => '1',
+					'article_id' => '1',
+					'comment' => 'First Comment for First Article'
+				),
+				1 => array(
+					'id' => '2',
+					'article_id' => '1',
+					'comment' => 'Second Comment for First Article'
+				),
+				2 => array(
+					'id' => '3',
+					'article_id' => '1',
+					'comment' => 'Third Comment for First Article'
+				),
+				3 => array(
+					'id' => '4',
+					'article_id' => '1',
+					'comment' => 'Fourth Comment for First Article'
+				)
+			)
+		);
+
+		$results = $Article
 			->do()
-				->find('published')
-				->find('list')
-				->toArray();
+				->find('all', array('contain' => array(
+					'User' => array('fields' => array('id', 'user'))
+				)))
+				->find('all', array('contain' => array(
+					'Comment' => array('fields' => array('id', 'article_id', 'comment'))
+				)))
+				->find('first', array('fields' => array('id', 'user_id', 'title')))
+			->done();
+
 		$this->assertEquals($expected, $results);
 	}
 }

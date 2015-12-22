@@ -9,5 +9,8 @@ class AppModel extends Model {
  */
 	public $recursive = -1;
 
-	public $actsAs = array('StackableFinder.StackableFinder');
+	public $actsAs = array(
+		'Containable',
+		'StackableFinder.StackableFinder'
+	);
 }
