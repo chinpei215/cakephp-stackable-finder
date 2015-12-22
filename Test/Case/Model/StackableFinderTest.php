@@ -13,9 +13,7 @@ class StackableFinderTest extends CakeTestCase {
  *
  * @var array
  */
-	public $fixtures = array(
-		'core.article',
-	);
+	public $fixtures = array();
 
 /**
  * setUp method
@@ -25,7 +23,8 @@ class StackableFinderTest extends CakeTestCase {
 	public function setUp() {
 		parent::setUp();
 
-		$this->StackableFinder = new StackableFinder(ClassRegistry::init('Article'));
+		$this->Article = $this->getMockForModel('Article', array('find', '_findAll', '_findList', '_findFirst'), array('table' => false));
+		$this->StackableFinder = new StackableFinder($this->Article);
 	}
 
 /**
@@ -34,9 +33,29 @@ class StackableFinderTest extends CakeTestCase {
  * @return void
  */
 	public function tearDown() {
-		unset($this->StackableFinder);
+		unset($this->Article, $this->StackableFinder);
 
 		parent::tearDown();
+	}
+
+/**
+ * Tests done method
+ *
+ * @return void
+ */
+	public function testDone() {
+		$expected = array(
+			array(
+				'Article' => array('id' => 1)
+			)
+		);
+
+		$this->Article->expects($this->at(0))
+			->method('find')
+			->with('all')
+			->will($this->returnValue($expected));
+
+		$this->assertEquals($expected, $this->StackableFinder->done());
 	}
 
 /**
@@ -45,9 +64,8 @@ class StackableFinderTest extends CakeTestCase {
  * @return void
  */
 	public function testStackingFinders() {
-		$Article = $this->getMockForModel('Article', array('_findX', '_findY', '_findZ', 'find'));
-
-		$finder = new StackableFinder($Article);
+		$Article = $this->Article;
+		$finder = $this->StackableFinder;
 
 		// First
 		$query = array(
@@ -62,7 +80,7 @@ class StackableFinderTest extends CakeTestCase {
 			'callbacks' => true,
 		);
 		$Article->expects($this->at(0))
-			->method('_findX')
+			->method('_findAll')
 			->with('before', $query)
 			->will($this->returnArgument(1));
 
@@ -86,7 +104,7 @@ class StackableFinderTest extends CakeTestCase {
 			'callbacks' => true,
 		);
 		$Article->expects($this->at(1))
-			->method('_findY')
+			->method('_findList')
 			->with('before', $query)
 			->will($this->returnArgument(1));
 
@@ -116,7 +134,7 @@ class StackableFinderTest extends CakeTestCase {
 			'callbacks' => true,
 		);
 		$Article->expects($this->at(2))
-			->method('_findZ')
+			->method('_findFirst')
 			->with('before', $query)
 			->will($this->returnArgument(1));
 
@@ -127,24 +145,24 @@ class StackableFinderTest extends CakeTestCase {
 			->will($this->returnValue($results));
 
 		$Article->expects($this->at(4))
-			->method('_findX')
+			->method('_findAll')
 			->with('after', $this->isType('array'), $results)
 			->will($this->returnValue($results));
 
 		$Article->expects($this->at(5))
-			->method('_findY')
+			->method('_findList')
 			->with('after', $query, $results)
 			->will($this->returnValue($results));
 
 		$Article->expects($this->at(6))
-			->method('_findZ')
+			->method('_findFirst')
 			->with('after', $this->isType('array'), $results)
 			->will($this->returnValue($results));
 
 		$finder
-			->find('x', array('conditions' => '1 = 1'))
-			->find('y', array('conditions' => array('created >=' => '2001-01-01'), 'limit' => 10, 'order' => array('published' => 'asc')))
-			->find('z', array('conditions' => array('created >=' => '2002-02-02'), 'limit' => 20, 'order' => array('id' => 'asc')))
+			->find('all', array('conditions' => '1 = 1'))
+			->find('list', array('conditions' => array('created >=' => '2001-01-01'), 'limit' => 10, 'order' => array('published' => 'asc')))
+			->find('first', array('conditions' => array('created >=' => '2002-02-02'), 'limit' => 20, 'order' => array('id' => 'asc')))
 			->done();
 	}
 
@@ -154,9 +172,8 @@ class StackableFinderTest extends CakeTestCase {
  * @return void
  */
 	public function testStackingMagicFinders() {
-		$Article = $this->getMockForModel('Article', array('_findAll', '_findFirst'));
-
-		$finder = new StackableFinder($Article);
+		$Article = $this->Article;
+		$finder = $this->StackableFinder;
 
 		$query = array(
 			'conditions' => array(
@@ -196,9 +213,7 @@ class StackableFinderTest extends CakeTestCase {
  * @return void
  */
 	public function testStackingMappedFinders() {
-		$Article = $this->getMockForModel('Article', array('_findAll'));
-		$Article->findMethods['published'] = true;
-
+		$Article = $this->Article;
 		$finder = new StackableFinder($Article);
 
 		$query = array(
@@ -218,6 +233,58 @@ class StackableFinderTest extends CakeTestCase {
 	}
 
 /**
+ * Tests first method
+ *
+ * @return void
+ */
+	public function testFirst() {
+		$finder = $this->getMock('StackableFinder', array('find', 'done'), array($this->Article));
+		$finder->expects($this->at(0))
+			->method('find')
+			->with('first')
+			->will($this->returnValue($finder));
+
+		$finder->expects($this->at(1))
+			->method('done')
+			->with();
+
+		$finder->first();
+	}
+
+/**
+ * Tests count method
+ *
+ * @return void
+ */
+	public function testCount() {
+		$finder = $this->getMock('StackableFinder', array('find', 'done'), array($this->Article));
+		$finder->expects($this->at(0))
+			->method('find')
+			->with('count')
+			->will($this->returnValue($finder));
+
+		$finder->expects($this->at(1))
+			->method('done')
+			->with();
+
+		$finder->count();
+	}
+
+/**
+ * Tests count method
+ *
+ * @return void
+ */
+	public function testToArray() {
+		$finder = $this->getMock('StackableFinder', array('find', 'done'), array($this->Article));
+		$finder->expects($this->at(0))
+			->method('done')
+			->with();
+
+		$finder->toArray();
+	}
+
+/**
  * Tests that calling an inexistent method throws an exception
  *
  * @expectedException BadMethodCallException
@@ -229,7 +296,7 @@ class StackableFinderTest extends CakeTestCase {
 	}
 
 /**
- * Test that magic find is unavaiable on other datasources
+ * Tests that magic find is unavaiable on other datasources
  *
  * @expectedException BadMethodCallException
  * @expectedExceptionMessage Datasource DataSource does not support magic find
@@ -237,7 +304,7 @@ class StackableFinderTest extends CakeTestCase {
  */
 	public function testMagicFindUnavailable() {
 		ConnectionManager::create('dummy', array('datasource' => 'DataSource'));
-		$finder = new StackableFinder(new AppModel(false, false, 'dummy'));
-		$finder->findById(1);
+		$this->Article->useDbConfig = 'dummy';
+		$this->StackableFinder->findById(1);
 	}
 }
