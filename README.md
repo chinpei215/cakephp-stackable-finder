@@ -22,7 +22,7 @@ You can start stacking finders by calling `do`:
 $articles = $this->Article
 	->do()
 		->find('all', ['conditions' => ['Article.created >=' => '2015-01-01']])
-		->findAllByAuthorId(1) // Magic finder
+		->findAllByUserId(1) // Magic finder
 		->find('published') // Custom finder
 		->find('list')
 	->done();
@@ -42,6 +42,19 @@ $articles = $this->Article
 	->do()
 		->find('published')
 		->find('first')
+	->done();
+```
+
+You can also use `where` or such setters for query options.
+```
+$articles = $this->Article
+	->do()
+		->select(['Article.id', 'Article.title'])
+		->contain('Author')
+		->where(['Article.user_id' => 1])
+		->order('Article.id' => 'DESC')
+		->limit(10)
+		->offset(0)
 	->done();
 ```
 
