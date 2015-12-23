@@ -28,7 +28,7 @@ class StackableFinder {
 	}
 
 /**
- * Handles magic finders.
+ * Handles magic finders and option setting methods
  *
  * @param string $name Name of method to call
  * @param array $args Arguments for the method
@@ -38,6 +38,7 @@ class StackableFinder {
  */
 	public function __call($name, $args) {
 		if (preg_match('/^find(\w*)By(.+)/', $name)) {
+			// Magic finder
 			$db = $this->Model->getDataSource();
 			if ($db instanceof DboSource) {
 				$this->alias = $this->Model->alias; // Hack for DboSource::query()
@@ -56,7 +57,7 @@ class StackableFinder {
  * @param string $type Type of find operation
  * @param array $query Option fields
  *
- * @return StackableFinder
+ * @return $this
  */
 	public function find($type = 'all', $query = array()) {
 		$method = '_find' . ucfirst($type);
@@ -65,37 +66,16 @@ class StackableFinder {
 			$method->setAccessible(true);
 		}
 
-		foreach ($this->query as $key => $val) {
-			if (isset($query[$key])) {
-				if ($this->query[$key] === null) {
-					$this->query[$key] = $query[$key];
-				} else {
-					switch ($key) {
-						case 'conditions':
-							$this->query[$key] = array('AND' => array($this->query[$key], $query[$key]));
-							break;
-						case 'limit':
-						case 'offset':
-						case 'page':
-						case 'callbacks':
-							$this->query[$key] = $query[$key];
-							break;
-						default:
-							$this->query[$key] = array_merge((array)$this->query[$key], (array)$query[$key]);
-							break;
-					}
-				}
-			}
-		}
+		$this->applyOptions($query);
 
-		$this->query = $this->_invoke($method, array('before', $this->query + $query));
+		$this->query = (array)$this->invoke($method, array('before', $this->query));
 		$this->stack[] = $method;
 
 		return $this;
 	}
 
 /**
- *  3.x compatible. Same as `$finder->find('first')->done()`.
+ * 3.x compatible. Same as `$finder->find('first')->done()`.
  *
  * @return mixed
  */
@@ -121,9 +101,118 @@ class StackableFinder {
 	public function done() {
 		$results = $this->Model->find('all', $this->query);
 		foreach ($this->stack as $method) {
-			$results = $this->_invoke($method, array('after', $this->query, $results));
+			$results = $this->invoke($method, array('after', $this->query, $results));
 		}
 		return $results;
+	}
+
+/**
+ * Retrieves the current query options
+ *
+ * @return array
+ */
+	public function getOptions() {
+		return $this->query;
+	}
+
+/**
+ * Merges or sets query options
+ *
+ * @param array $options Finder options.
+ * @return $this
+ */
+	public function applyOptions(array $options) {
+		$methods = array(
+			'fields' => 'select',
+			'conditions' => 'where',
+			'joins' => 'join',
+			'order' => 'order',
+			'limit' => 'limit',
+			'offset' => 'offset',
+			'group' => 'group',
+			'contain' => 'contain',
+			'page' => 'page',
+		);
+
+		foreach ($options as $key => $value) {
+			if (isset($methods[$key])) {
+				$method = $methods[$key];
+				$this->{$method}($value);
+			} else {
+				$this->setOption($key, $value);
+			}
+		}
+
+		return $this;
+	}
+
+	public function where($conditions) { // @codingStandardsIgnoreLine
+		if (isset($this->query['conditions'])) {
+			$conditions = array('AND' => array($this->query['conditions'], $conditions));
+		}
+		return $this->setOption('conditions', $conditions);
+	}
+
+	public function contain($associations) { // @codingStandardsIgnoreLine
+		return $this->mergeOption('contain', $associations);
+	}
+
+	public function join($tables) { // @codingStandardsIgnoreLine
+		return $this->mergeOption('joins', $tables);
+	}
+
+	public function select($fields) { // @codingStandardsIgnoreLine
+		return $this->mergeOption('fields', $fields);
+	}
+
+	public function order($fields) { // @codingStandardsIgnoreLine
+		return $this->mergeOption('order', $fields);
+	}
+
+	public function group($fields) { // @codingStandardsIgnoreLine
+		return $this->mergeOption('group', $fields);
+	}
+
+	public function limit($num) { // @codingStandardsIgnoreLine
+		return $this->setOption('limit', $num);
+	}
+
+	public function offset($num) { // @codingStandardsIgnoreLine
+		return $this->setOption('offset', $num);
+	}
+
+	public function page($num) { // @codingStandardsIgnoreLine
+		return $this->setOption('page', $num);
+	}
+
+/**
+ * Marges a query option into the stack
+ *
+ * @param array $key The type of the query option
+ * @param array $value The value of the query option
+ *
+ * @return $this
+ */
+	private function mergeOption($key, $value) { // @codingStandardsIgnoreLine
+		if (isset($this->query[$key])) {
+			$value = array_merge((array)$this->query[$key], (array)$value);
+		}
+		return $this->setOption($key, $value);
+	}
+
+/**
+ * Sets a query option
+ *
+ * @param array $key The type of the query option
+ * @param array $value The value of the query option
+ *
+ * @return $this
+ */
+	private function setOption($key, $value) { // @codingStandardsIgnoreLine
+		if ($value !== null) {
+			$this->query[$key] = $value;
+		}
+		return $this;
 	}
 
 /**
@@ -134,7 +223,7 @@ class StackableFinder {
  *
  * @return array Query or results.
  */
-	private function _invoke($method, $args) { // @codingStandardsIgnoreLine
+	private function invoke($method, $args) { // @codingStandardsIgnoreLine
 		if ($method instanceof ReflectionMethod) {
 			return $method->invokeArgs($this->Model, $args);
 		}

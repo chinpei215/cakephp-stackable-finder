@@ -149,6 +149,47 @@ class StackableFinderTest extends CakeTestCase {
 	}
 
 /**
+ * Tests that applyOptions method calls setters correctly
+ *
+ * @param string $option The query option name.
+ * @param string $method The setter for the query option.
+ *
+ * @return void
+ *
+ * @dataProvider dataProviderForTestOptionSetters
+ */
+	public function testOptionSetters($option, $method) {
+		$finder = $this->getMock('StackableFinder', array($method), array($this->Article));
+
+		$value = 'something';
+
+		$finder->expects($this->once())
+			->method($method)
+			->with($value);
+
+		$finder->applyOptions(array($option => $value));
+	}
+
+/**
+ * Data provider for testOptionSetters
+ * 
+ * @return array
+ */
+	public function dataProviderForTestOptionSetters() {
+		return array(
+			array('fields', 'select'),
+			array('conditions', 'where'),
+			array('joins', 'join'),
+			array('order', 'order'),
+			array('limit', 'limit'),
+			array('offset', 'offset'),
+			array('group', 'group'),
+			array('contain', 'contain'),
+			array('page', 'page'),
+		);
+	}
+
+/**
  * Tests each query option stacking correctly
  *
  * @param array $first First query option
@@ -157,36 +198,30 @@ class StackableFinderTest extends CakeTestCase {
  *
  * @return array
  *
- * @dataProvider dataProviderForTestEachOption
+ * @dataProvider dataProviderForTestApplyOptions
  */
-	public function testEachOption($first, $second, $expected) {
-		$query = array(
-			'conditions' => null,
-			'fields' => null, 'joins' => array(), 'limit' => null, 'offset' => null,
-			'order' => null, 'page' => 1, 'group' => null, 'callbacks' => true,
-		);
+	public function testApplyOptions($first, $second, $expected) {
+		$options = $this->StackableFinder
+			->applyOptions($first)
+			->applyOptions($second)
+			->getOptions();
 
-		$query = $first + $query;
-		$this->Article->expects($this->at(0))
-			->method('_findAll')
-			->with('before', $query)
-			->will($this->returnArgument(1));
-
-		$query = $expected + $query;
-		$this->Article->expects($this->at(1))
-			->method('_findList')
-			->with('before', $query);
-
-		$this->StackableFinder->find('all', $first)->find('list', $second);
+		$this->assertTrue(Hash::contains($options, $expected));
 	}
 
 /**
- * Data provider for testEachOption
+ * Data provider for testApplyOptions
  *
  * @return array
  */
-	public function dataProviderForTestEachOption() {
+	public function dataProviderForTestApplyOptions() {
 		return array(
+			// conditions
+			array(
+				array('conditions' => array('user_id' => 1)),
+				array('conditions' => array('published' => 'Y')),
+				array('conditions' => array('AND' => array(array('user_id' => 1), array('published' => 'Y'))))
+			),
 			// fields
 			array(
 				array('fields' => array('id')),
@@ -261,7 +296,18 @@ class StackableFinderTest extends CakeTestCase {
 				array('callbacks' => 'before'),
 				array('callbacks' => 'after'),
 				array('callbacks' => 'after'),
-			)
+			),
+			// something
+			array(
+				array('something' => true),
+				array('something' => false),
+				array('something' => false),
+			),
+			array(
+				array('something' => true),
+				array('something' => null),
+				array('something' => true),
+			),
 		);
 	}
 
@@ -277,7 +323,6 @@ class StackableFinderTest extends CakeTestCase {
 			),
 			'fields' => null, 'joins' => array(), 'limit' => null, 'offset' => null,
 			'order' => null, 'page' => 1, 'group' => null, 'callbacks' => true,
-			'recursive' => null,
 		);
 		$this->Article->expects($this->at(0))
 			->method('_findAll')
@@ -293,7 +338,6 @@ class StackableFinderTest extends CakeTestCase {
 			),
 			'fields' => null, 'joins' => array(), 'limit' => null, 'offset' => null,
 			'order' => null, 'page' => 1, 'group' => null, 'callbacks' => true,
-			'recursive' => null,
 		);
 		$this->Article->expects($this->at(1))
 			->method('_findFirst')
