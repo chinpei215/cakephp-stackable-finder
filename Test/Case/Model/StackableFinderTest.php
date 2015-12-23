@@ -85,22 +85,14 @@ class StackableFinderTest extends CakeTestCase {
 
 		// Second
 		$query = array(
-			'conditions' => array( // Should be nested
+			'conditions' => array(
 				'AND' => array(
 					'1 = 1',
 					array('created >=' => '2001-01-01')
 				),
 			),
-			'fields' => null,
-			'joins' => array(),
-			'limit' => 10,
-			'offset' => null,
-			'order' => array(
-				'published' => 'asc',
-			),
-			'page' => 1,
-			'group' => null,
-			'callbacks' => true,
+			'fields' => null, 'joins' => array(), 'limit' => null, 'offset' => null,
+			'order' => null, 'page' => 1, 'group' => null, 'callbacks' => true,
 		);
 		$Article->expects($this->at(1))
 			->method('_findList')
@@ -109,7 +101,7 @@ class StackableFinderTest extends CakeTestCase {
 
 		// Third
 		$query = array(
-			'conditions' => array( // Should be nested deeply
+			'conditions' => array(
 				'AND' => array(
 					array(
 						'AND' => array(
@@ -120,17 +112,8 @@ class StackableFinderTest extends CakeTestCase {
 					array('created >=' => '2002-02-02'),
 				),
 			),
-			'fields' => null,
-			'joins' => array(),
-			'limit' => 20, // Should be overwritten
-			'offset' => null,
-			'order' => array( // Should be merged
-				'published' => 'asc',
-				'id' => 'asc',
-			),
-			'page' => 1,
-			'group' => null,
-			'callbacks' => true,
+			'fields' => null, 'joins' => array(), 'limit' => null, 'offset' => null,
+			'order' => null, 'page' => 1, 'group' => null, 'callbacks' => true,
 		);
 		$Article->expects($this->at(2))
 			->method('_findFirst')
@@ -160,9 +143,126 @@ class StackableFinderTest extends CakeTestCase {
 
 		$this->StackableFinder
 			->find('all', array('conditions' => '1 = 1'))
-			->find('list', array('conditions' => array('created >=' => '2001-01-01'), 'limit' => 10, 'order' => array('published' => 'asc')))
-			->find('first', array('conditions' => array('created >=' => '2002-02-02'), 'limit' => 20, 'order' => array('id' => 'asc')))
+			->find('list', array('conditions' => array('created >=' => '2001-01-01')))
+			->find('first', array('conditions' => array('created >=' => '2002-02-02')))
 			->done();
+	}
+
+/**
+ * Tests each query option stacking correctly
+ *
+ * @param array $first First query option
+ * @param array $second Second query option
+ * @param array $expected Expected
+ *
+ * @return array
+ *
+ * @dataProvider dataProviderForTestEachOption
+ */
+	public function testEachOption($first, $second, $expected) {
+		$query = array(
+			'conditions' => null,
+			'fields' => null, 'joins' => array(), 'limit' => null, 'offset' => null,
+			'order' => null, 'page' => 1, 'group' => null, 'callbacks' => true,
+		);
+
+		$query = $first + $query;
+		$this->Article->expects($this->at(0))
+			->method('_findAll')
+			->with('before', $query)
+			->will($this->returnArgument(1));
+
+		$query = $expected + $query;
+		$this->Article->expects($this->at(1))
+			->method('_findList')
+			->with('before', $query);
+
+		$this->StackableFinder->find('all', $first)->find('list', $second);
+	}
+
+/**
+ * Data provider for testEachOption
+ *
+ * @return array
+ */
+	public function dataProviderForTestEachOption() {
+		return array(
+			// fields
+			array(
+				array('fields' => array('id')),
+				array('fields' => 'title'),
+				array('fields' => array('id', 'title'))
+			),
+			// joins
+			array(
+				array('joins' => array(
+					array(
+						'type' => 'INNER',
+						'table' => 'users',
+						'alias' => 'User',
+						'conditions' => 'User.id = Article.user_id',
+					),
+				)),
+				array('joins' => array(
+					array(
+						'type' => 'LEFT',
+						'table' => 'comments',
+						'alias' => 'Comment',
+						'conditions' => 'Comment.article_id = Article.id',
+					),
+				)),
+				array('joins' => array(
+					array(
+						'type' => 'INNER',
+						'table' => 'users',
+						'alias' => 'User',
+						'conditions' => 'User.id = Article.user_id',
+					),
+					array(
+						'type' => 'LEFT',
+						'table' => 'comments',
+						'alias' => 'Comment',
+						'conditions' => 'Comment.article_id = Article.id',
+					),
+				)),
+			),
+			// limit
+			array(
+				array('limit' => 10),
+				array('limit' => 20),
+				array('limit' => 20),
+			),
+			// offset
+			array(
+				array('offset' => 10),
+				array('offset' => 20),
+				array('offset' => 20),
+			),
+			// order
+			array(
+				array('order' => 'user_id'),
+				array('order' => array('modified' => 'DESC')),
+				array('order' => array('user_id', 'modified' => 'DESC')),
+			),
+			// page
+			array(
+				array('page' => 1),
+				array('page' => 2),
+				array('page' => 2),
+			),
+			// group
+			array(
+				array('group' => 'user_id'),
+				array('group' => 'published'),
+				array('group' => array('user_id', 'published')),
+			),
+			// callbacks
+			array(
+				array('callbacks' => 'before'),
+				array('callbacks' => 'after'),
+				array('callbacks' => 'after'),
+			)
+		);
 	}
 
 /**
@@ -171,8 +271,6 @@ class StackableFinderTest extends CakeTestCase {
  * @return void
  */
 	public function testStackingMagicFinders() {
-		$Article = $this->Article;
-
 		$query = array(
 			'conditions' => array(
 				'Article.published' => 'Y',
@@ -181,7 +279,7 @@ class StackableFinderTest extends CakeTestCase {
 			'order' => null, 'page' => 1, 'group' => null, 'callbacks' => true,
 			'recursive' => null,
 		);
-		$Article->expects($this->at(0))
+		$this->Article->expects($this->at(0))
 			->method('_findAll')
 			->with('before', $query)
 			->will($this->returnArgument(1));
@@ -197,7 +295,7 @@ class StackableFinderTest extends CakeTestCase {
 			'order' => null, 'page' => 1, 'group' => null, 'callbacks' => true,
 			'recursive' => null,
 		);
-		$Article->expects($this->at(1))
+		$this->Article->expects($this->at(1))
 			->method('_findFirst')
 			->with('before', $query)
 			->will($this->returnArgument(1));
@@ -211,8 +309,6 @@ class StackableFinderTest extends CakeTestCase {
  * @return void
  */
 	public function testStackingMappedFinders() {
-		$Article = $this->Article;
-
 		$query = array(
 			'conditions' => array(
 				'Article.published' => 'Y',
@@ -220,12 +316,11 @@ class StackableFinderTest extends CakeTestCase {
 			'fields' => null, 'joins' => array(), 'limit' => null, 'offset' => null,
 			'order' => null, 'page' => 1, 'group' => null, 'callbacks' => true,
 		);
-		$Article->expects($this->at(0))
+		$this->Article->expects($this->at(0))
 			->method('_findAll')
-			->with('before', $query)
-			->will($this->returnArgument(1));
+			->with('before', $query);
 
-		$this->assertFalse(method_exists($Article, '_findPublished'));
+		$this->assertFalse(method_exists($this->Article, '_findPublished'));
 		$this->StackableFinder->find('published')->find('all');
 	}
 
@@ -268,13 +363,13 @@ class StackableFinderTest extends CakeTestCase {
 /**
  * Tests that beforeFind/afterFind events are triggered or not
  *
- * @dataProvider dataProviderForTestEventTriggering
- * 
  * @param mixed $callbacks Type of `callbacks` options
  * @param int $before Expected number of `beforeFind` calls
  * @param int $after Expected number of `afterFind` calls
  *
  * @return void
+ *
+ * @dataProvider dataProviderForTestEventTriggering
  */
 	public function testEventTriggering($callbacks, $before, $after) {
 		$db = $this->getMock('DataSource', array('read'));
