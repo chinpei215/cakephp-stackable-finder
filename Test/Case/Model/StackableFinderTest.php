@@ -23,7 +23,7 @@ class StackableFinderTest extends CakeTestCase {
 	public function setUp() {
 		parent::setUp();
 
-		$this->Article = $this->getMockForModel('Article', array('find', '_findAll', '_findList', '_findFirst'), array('table' => false));
+		$this->Article = $this->getMockForModel('Article', array('find', 'schema', '_findAll', '_findList', '_findFirst'), array('table' => false));
 		$this->StackableFinder = new StackableFinder($this->Article);
 	}
 
@@ -36,6 +36,49 @@ class StackableFinderTest extends CakeTestCase {
 		unset($this->Article, $this->StackableFinder);
 
 		parent::tearDown();
+	}
+
+/**
+ * Tests __isset method
+ *
+ * @param string $name The name of the property
+ * @param mixed $expected Expected
+ *
+ * @return void
+ *
+ * @dataProvider dataProviderForTestIsset
+ */
+	public function testMagicIsset($name, $expected) {
+		$this->assertSame($expected, isset($this->StackableFinder->$name));
+	}
+
+/**
+ * Data provider for testIsset 
+ *
+ * @return array
+ */
+	public function dataProviderForTestIsset() {
+		return array(
+			array('type', true),
+			array('alias', true),
+			array('value', true),
+			array('undefined', false)
+		);
+	}
+
+/**
+ * Tests __get method
+ *
+ * @return void
+ */
+	public function testMagicGet() {
+		$finder = $this->StackableFinder;
+		$finder->select(array('id'));
+
+		$this->assertEquals('Article', $finder->alias);
+		$this->assertEquals('expression', $finder->type);
+		$this->assertStringStartsWith('(SELECT id FROM', $finder->value);
+		$this->assertNull(@$finder->undefined); // @codingStandardsIgnoreLine
 	}
 
 /**
@@ -149,169 +192,6 @@ class StackableFinderTest extends CakeTestCase {
 	}
 
 /**
- * Tests that applyOptions method calls setters correctly
- *
- * @param string $option The query option name.
- * @param string $method The setter for the query option.
- *
- * @return void
- *
- * @dataProvider dataProviderForTestOptionSetters
- */
-	public function testOptionSetters($option, $method) {
-		$finder = $this->getMock('StackableFinder', array($method), array($this->Article));
-
-		$value = 'something';
-
-		$finder->expects($this->once())
-			->method($method)
-			->with($value);
-
-		$finder->applyOptions(array($option => $value));
-	}
-
-/**
- * Data provider for testOptionSetters
- * 
- * @return array
- */
-	public function dataProviderForTestOptionSetters() {
-		return array(
-			array('fields', 'select'),
-			array('conditions', 'where'),
-			array('joins', 'join'),
-			array('order', 'order'),
-			array('limit', 'limit'),
-			array('offset', 'offset'),
-			array('group', 'group'),
-			array('contain', 'contain'),
-			array('page', 'page'),
-		);
-	}
-
-/**
- * Tests each query option stacking correctly
- *
- * @param array $first First query option
- * @param array $second Second query option
- * @param array $expected Expected
- *
- * @return array
- *
- * @dataProvider dataProviderForTestApplyOptions
- */
-	public function testApplyOptions($first, $second, $expected) {
-		$options = $this->StackableFinder
-			->applyOptions($first)
-			->applyOptions($second)
-			->getOptions();
-
-		$this->assertTrue(Hash::contains($options, $expected));
-	}
-
-/**
- * Data provider for testApplyOptions
- *
- * @return array
- */
-	public function dataProviderForTestApplyOptions() {
-		return array(
-			// conditions
-			array(
-				array('conditions' => array('user_id' => 1)),
-				array('conditions' => array('published' => 'Y')),
-				array('conditions' => array('AND' => array(array('user_id' => 1), array('published' => 'Y'))))
-			),
-			// fields
-			array(
-				array('fields' => array('id')),
-				array('fields' => 'title'),
-				array('fields' => array('id', 'title'))
-			),
-			// joins
-			array(
-				array('joins' => array(
-					array(
-						'type' => 'INNER',
-						'table' => 'users',
-						'alias' => 'User',
-						'conditions' => 'User.id = Article.user_id',
-					),
-				)),
-				array('joins' => array(
-					array(
-						'type' => 'LEFT',
-						'table' => 'comments',
-						'alias' => 'Comment',
-						'conditions' => 'Comment.article_id = Article.id',
-					),
-				)),
-				array('joins' => array(
-					array(
-						'type' => 'INNER',
-						'table' => 'users',
-						'alias' => 'User',
-						'conditions' => 'User.id = Article.user_id',
-					),
-					array(
-						'type' => 'LEFT',
-						'table' => 'comments',
-						'alias' => 'Comment',
-						'conditions' => 'Comment.article_id = Article.id',
-					),
-				)),
-			),
-			// limit
-			array(
-				array('limit' => 10),
-				array('limit' => 20),
-				array('limit' => 20),
-			),
-			// offset
-			array(
-				array('offset' => 10),
-				array('offset' => 20),
-				array('offset' => 20),
-			),
-			// order
-			array(
-				array('order' => 'user_id'),
-				array('order' => array('modified' => 'DESC')),
-				array('order' => array('user_id', 'modified' => 'DESC')),
-			),
-			// page
-			array(
-				array('page' => 1),
-				array('page' => 2),
-				array('page' => 2),
-			),
-			// group
-			array(
-				array('group' => 'user_id'),
-				array('group' => 'published'),
-				array('group' => array('user_id', 'published')),
-			),
-			// callbacks
-			array(
-				array('callbacks' => 'before'),
-				array('callbacks' => 'after'),
-				array('callbacks' => 'after'),
-			),
-			// something
-			array(
-				array('something' => true),
-				array('something' => false),
-				array('something' => false),
-			),
-			array(
-				array('something' => true),
-				array('something' => null),
-				array('something' => true),
-			),
-		);
-	}
-
-/**
  * Tests that magic finders also can be stacked
  *
  * @return void
@@ -362,7 +242,8 @@ class StackableFinderTest extends CakeTestCase {
 		);
 		$this->Article->expects($this->at(0))
 			->method('_findAll')
-			->with('before', $query);
+			->with('before', $query)
+			->will($this->returnArgument(1));
 
 		$this->assertFalse(method_exists($this->Article, '_findPublished'));
 		$this->StackableFinder->find('published')->find('all');
@@ -451,14 +332,24 @@ class StackableFinderTest extends CakeTestCase {
 	}
 
 /**
- * Tests that calling an inexistent method throws an exception
+ * Tests that calling an undefined method throws an exception
  *
  * @expectedException BadMethodCallException
  * @expectedExceptionMessage Method StackableFinder::foo does not exist
  * @return void
  */
-	public function testBadMethodCall() {
+	public function testCallingUndefinedMethod() {
 		$this->StackableFinder->foo();
+	}
+
+/**
+ * Tests that getting an undefined peroperty throw an error
+ *
+ * @expectedException PHPUnit_Framework_Error
+ * @return void
+ */
+	public function testGettingUndefinedProperty() {
+		$this->StackableFinder->undefined;
 	}
 
 /**

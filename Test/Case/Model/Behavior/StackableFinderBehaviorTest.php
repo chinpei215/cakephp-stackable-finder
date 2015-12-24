@@ -179,4 +179,29 @@ class StackableFinderBehaviorTest extends CakeTestCase {
 
 		$this->assertEquals($expected, $results);
 	}
+
+/**
+ * Tests subquery
+ *
+ * @return void
+ */
+	public function testSubQuery() {
+		$this->loadFixtures('Article', 'User');
+		$User = ClassRegistry::init('User');
+
+		$q = $User->Article->do()->select(array('user_id'));
+
+		$query = $User->do()
+			->select(array('id', 'user'))
+			->where(array('id NOT IN ?' => array($q)));
+
+		$users = $query->done();
+		$expected = array(
+			array('User' => array('id' => 2, 'user' => 'nate')),
+			array('User' => array('id' => 4, 'user' => 'garrett')),
+		);
+
+		$this->assertEquals($expected, $users);
+		$this->assertContains('NOT IN (SELECT', $query->sql());
+	}
 }
