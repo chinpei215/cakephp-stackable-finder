@@ -30,11 +30,11 @@ You can start stacking finders by calling `q()`, and you can execute the query a
 Note that `q()` method returns an instance of `StackableFinder`. The object also has `find()` method like a Model - so you can use fluent interface, but it is not a sub-class of Model.
 
 So you cannot call any other methods implemented by Model.
-```
+```php
 $this->Article->->q()->read(); // Error 
 ```
 Instead, you can use `where()` or some other 3.x compatible methods for building queries.
-```
+```php
 $articles = $this->Article->q()
 	->select(['Article.id', 'Article.title'])
 	->contain('Author')
@@ -48,7 +48,7 @@ $articles = $this->Article->q()
 ### Subqueries
 
 You can make subqueries like the following:
-```
+```php
 $q = $this->User->q()->select('id');
 
 $articles = $this->Article->q()
@@ -67,7 +67,7 @@ It is not compatible with 3.x but it is nessecary at this time in 2.x.
 As mentioned above, you can do it by calling `exec()` but there are some other ways to get the results of the query.
 
 You can iterate the `StackableFinder` object directly.
-```
+```php
 $q = $this->Article->q()->find('list');
 foreach ($q as $id => $title) {
 	// ...
@@ -91,7 +91,7 @@ But, note that stacking `find('first')` or `first()` after `find('list')` doesn'
 Because `_findFirst()` doen't returns the _first_ result actually. That returns the element with index `0`.
 
 So this is a bad example:
-```
+```php
 $articles = $this->Article->q()
 	->find('list')
 	->first();
