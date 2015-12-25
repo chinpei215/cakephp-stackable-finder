@@ -31,7 +31,7 @@ Note that `q()` method returns an instance of `StackableFinder`. The object also
 
 So you cannot call any other methods implemented by Model.
 ```php
-$this->Article->->q()->read(); // Error 
+$this->Article->q()->read(); // Error 
 ```
 Instead, you can use `where()` or some other 3.x compatible methods for building queries.
 ```php
@@ -99,6 +99,6 @@ $articles = $this->Article->q()
 You will get an empty array instead of the first item of the list.
 
 Also note that stacking `find('count')` or `count()` after `find('list')` doesn't work.
-Because `_findCount()` expects an array like `[['Model' => ['count' => N ]]]`, but `_findList` changes the array before it called. 
+Because `_findCount()` expects an array like `[['Model' => ['count' => N ]]]`, but `_findList` changes the array before it get called. 
 
 You can override thease methods in your model to change the behaviors, if necessary.
