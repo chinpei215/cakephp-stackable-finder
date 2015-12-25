@@ -215,9 +215,9 @@ class StackableFinderBehaviorTest extends CakeTestCase {
 		$this->loadFixtures('Article', 'User');
 		$User = ClassRegistry::init('User');
 
-		$q = $User->Article->do()->select(array('user_id'));
+		$q = $User->Article->q()->select('user_id');
 
-		$query = $User->do()
+		$query = $User->q()
 			->select(array('id', 'user'))
 			->where(array('id NOT IN ?' => array($q)));
 

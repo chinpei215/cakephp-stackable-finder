@@ -383,7 +383,7 @@ class StackableFinderTest extends CakeTestCase {
 					),
 				))
 				->contain('Comment')
-				->where(array('published' => 1))
+				->where(array('published' => 'Y'))
 				->group('user_id')
 				->order(array('user_id' => 'ASC'))
 				->limit(15)
@@ -401,9 +401,9 @@ class StackableFinderTest extends CakeTestCase {
 					'conditions' => 'User.id = Article.user_id',
 				),
 			),
-			'contain' => 'Comment',
-			'conditions' => array('published' => 1),
-			'group' => 'user_id',
+			'contain' => array('Comment'),
+			'conditions' => array('published' => 'Y'),
+			'group' => array('user_id'),
 			'order' => array('user_id' => 'ASC'),
 			'limit' => 15,
 			'offset' => 0,

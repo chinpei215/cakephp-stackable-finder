@@ -57,68 +57,65 @@ class StackableFinderOptionsTest extends CakeTestCase {
 	}
 
 /**
- * Tests each query option stacking correctly
+ * Tests applyOption() method
  *
- * @param array $values Query options
- * @param array $expected Expected
- *
- * @return array
- *
- * @dataProvider dataProviderForTestApplyOptions
+ * @dataProvider dataProviderForTestApplyOption
  */
-	public function testApplyOptions($values, $expected) {
+	public function testApplyOption($name, $values, $expected) {
 		$options = $this->StackableFinderOptions;
-
+		
 		foreach ($values as $value) {
-			$options->applyOptions($value);
+			$options->applyOption($name, $value);
 		}
-		$this->assertTrue(Hash::contains($options->getOptions(), $expected));
+
+		$results = $options->getOptions();
+		$this->assertEquals($expected, $results[$name]);
 	}
 
 /**
- * Data provider for testApplyOptions
+ * Data provider for testApplyOption()
  *
  * @return array
  */
-	public function dataProviderForTestApplyOptions() {
+	public function dataProviderForTestApplyOption() {
 		return array(
 			// conditions
 			array(
+				'conditions',
 				array( 
-					array('conditions' => array('user_id' => 1)),
-					array('conditions' => array('published' => 'Y')) 
+					array('user_id' => 1),
+					array('published' => 'Y'),
 				),
-				array('conditions' => array('AND' => array(array('user_id' => 1), array('published' => 'Y'))))
+				array('AND' => array(array('user_id' => 1), array('published' => 'Y')))
 			),
 			// fields
 			array(
-				array(
-					array('fields' => array('id')),
-					array('fields' => 'title'),
-				),
-				array('fields' => array('id', 'title'))
+				'fields',
+				array('id', 'title'),
+				array('id', 'title'),
 			),
 			// joins
 			array(
+				'joins',
 				array(
-					array('joins' => array(
+					array(
 						array(
 							'type' => 'INNER',
 							'table' => 'users',
 							'alias' => 'User',
 							'conditions' => 'User.id = Article.user_id',
 						),
-					)),
-					array('joins' => array(
+					),
+					array(
 						array(
 							'type' => 'LEFT',
 							'table' => 'comments',
 							'alias' => 'Comment',
 							'conditions' => 'Comment.article_id = Article.id',
 						),
-					)),
+					),
 				),
-				array('joins' => array(
+				array(
 					array(
 						'type' => 'INNER',
 						'table' => 'users',
@@ -131,71 +128,189 @@ class StackableFinderOptionsTest extends CakeTestCase {
 						'alias' => 'Comment',
 						'conditions' => 'Comment.article_id = Article.id',
 					),
-				)),
+				),
+			),
+			// contain
+			array(
+				'contain',
+				array('User', 'Comment'),
+				array('User', 'Comment'),
 			),
 			// limit
 			array(
-				array(
-					array('limit' => 10),
-					array('limit' => 20),
-				),
-				array('limit' => 20),
+				'limit',
+				array(10, 20),
+				20,
 			),
 			// offset
 			array(
-				array(
-					array('offset' => 10),
-					array('offset' => 20),
-				),
-				array('offset' => 20),
+				'offset',
+				array(10, 20),
+				20,
 			),
 			// order
 			array(
+				'order',
 				array(
-					array('order' => 'user_id'),
-					array('order' => array('modified' => 'DESC')),
+					'user_id',
+					array('modified' => 'DESC'),
 				),
-				array('order' => array('user_id', 'modified' => 'DESC')),
+				array('user_id', 'modified' => 'DESC'),
 			),
 			// page
 			array(
-				array(
-					array('page' => 1),
-					array('page' => 2),
-				),
-				array('page' => 2),
+				'page',
+				array(1, 2),
+				2,
 			),
 			// group
 			array(
-				array(
-					array('group' => 'user_id'),
-				array('group' => 'published'),
-				),
-				array('group' => array('user_id', 'published')),
+				'group',
+				array('user_id', 'published'),
+				array('user_id', 'published'),
 			),
 			// callbacks
 			array(
-				array(
-					array('callbacks' => 'before'),
-					array('callbacks' => 'after'),
-				),
-				array('callbacks' => 'after'),
+				'before',
+				array('before', 'after'),
+				'after',
 			),
 			// something
 			array(
-				array(
-					array('something' => true),
-					array('something' => false),
-				),
-				array('something' => false),
+				'something',
+				array(true, false),
+				false,
 			),
 			array(
-				array(
-					array('something' => true),
-					array('something' => null),
-				),
-				array('something' => true),
+				'something',
+				array(true, null),
+				true,
 			),
 		);
+	}
+
+/**
+ * Tests each query option stacking correctly
+ *
+ * @param array $values Query options
+ * @param array $expected Expected
+ *
+ * @return array
+ */
+	public function testApplyOptions() {
+		$options = $this->StackableFinderOptions;
+
+		// First
+		$values = array(
+			'fields' => 'user_id',
+			'joins' => array(
+				array(
+					'type' => 'INNER',
+					'table' => 'users',
+					'alias' => 'User',
+					'conditions' => 'User.id = Article.user_id',
+				),
+			),
+			'contain' => 'Comment',
+			'conditions' => array('published' => 'Y'),
+			'group' => 'user_id',
+			'order' => array('user_id' => 'ASC'),
+			'limit' => 15,
+			'offset' => 0,
+			'page' => 1,
+			'callbacks' => false,
+		);
+
+		$expected = array(
+			'fields' => array('user_id'),
+			'joins' => array(
+				array(
+					'type' => 'INNER',
+					'table' => 'users',
+					'alias' => 'User',
+					'conditions' => 'User.id = Article.user_id',
+				),
+			),
+			'contain' => array('Comment'),
+			'conditions' => array('published' => 'Y'),
+			'group' => array('user_id'),
+			'order' => array('user_id' => 'ASC'),
+			'limit' => 15,
+			'offset' => 0,
+			'page' => 1,
+			'callbacks' => false,
+		);
+
+		$options->applyOptions($values);
+		$results = $options->getOptions();
+		$this->assertEquals($expected, $results);
+
+		// Second
+		$values = array(
+			'fields' => 'COUNT(*)',
+			'joins' => array(
+				array(
+					'type' => 'LEFT',
+					'table' => 'articles_tags',
+					'alias' => 'ArticlesTag',
+					'conditions' => 'Article.id = ArticlesTag.article_id',
+				),
+				array(
+					'type' => 'LEFT',
+					'table' => 'tags',
+					'alias' => 'Tag',
+					'conditions' => 'Tag.id = ArticlesTag.tag_id',
+				),
+			),
+			'contain' => null,
+			'conditions' => 'Tag.id IS NOT NULL',
+			'group' => null,
+			'order' => 'COUNT(*)',
+			'limit' => 30,
+			'offset' => null,
+			'page' => null,
+			'callbacks' => true,
+		);
+
+		$expected = array(
+			'fields' => array('user_id', 'COUNT(*)'),
+			'joins' => array(
+				array(
+					'type' => 'INNER',
+					'table' => 'users',
+					'alias' => 'User',
+					'conditions' => 'User.id = Article.user_id',
+				),
+				array(
+					'type' => 'LEFT',
+					'table' => 'articles_tags',
+					'alias' => 'ArticlesTag',
+					'conditions' => 'Article.id = ArticlesTag.article_id',
+				),
+				array(
+					'type' => 'LEFT',
+					'table' => 'tags',
+					'alias' => 'Tag',
+					'conditions' => 'Tag.id = ArticlesTag.tag_id',
+				),
+			),
+			'contain' => array('Comment'),
+			'conditions' => array(
+				'AND' => array(
+					array('published' => 'Y'),
+					'Tag.id IS NOT NULL',
+				)
+			),
+			'group' => array('user_id'),
+			'order' => array('user_id' => 'ASC', 'COUNT(*)'),
+			'limit' => 30,
+			'offset' => 0,
+			'page' => 1,
+			'callbacks' => true,
+		);
+
+		$options->applyOptions($values);
+		$results = $options->getOptions();
+		$this->assertEquals($expected, $results);
 	}
 }

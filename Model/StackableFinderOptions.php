@@ -87,8 +87,11 @@ class StackableFinderOptions {
  */
 	private function setOption($name, $value, $merge = false) { // @codingStandardsIgnoreLine
 		if ($value !== null) {
-			if ($merge && isset($this->options[$name])) {
-				$value = array_merge((array)$this->options[$name], (array)$value);
+			if ($merge) {
+				$value = (array)$value;
+				if (isset($this->options[$name])) {
+					$value = array_merge((array)$this->options[$name], $value);
+				}
 			}
 			$this->options[$name] = $value;
 		}
