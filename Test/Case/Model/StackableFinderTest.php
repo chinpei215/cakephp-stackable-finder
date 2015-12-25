@@ -42,22 +42,21 @@ class StackableFinderTest extends CakeTestCase {
  * Tests __isset method
  *
  * @param string $name The name of the property
- * @param mixed $expected Expected
- *
+ * @param mixed $expected Expected results
  * @return void
  *
- * @dataProvider dataProviderForTestIsset
+ * @dataProvider dataProviderForTestMagicIsset
  */
 	public function testMagicIsset($name, $expected) {
 		$this->assertSame($expected, isset($this->StackableFinder->$name));
 	}
 
 /**
- * Data provider for testIsset 
+ * Data provider for testMagicIsset 
  *
  * @return array
  */
-	public function dataProviderForTestIsset() {
+	public function dataProviderForTestMagicIsset() {
 		return array(
 			array('type', true),
 			array('alias', true),
@@ -82,11 +81,19 @@ class StackableFinderTest extends CakeTestCase {
 	}
 
 /**
+ * Tests getIterator method
+ */
+	public function testGetIterator() {
+		$this->Article->expects($this->once())->method('find');
+		$this->assertInstanceOf('Iterator', $this->StackableFinder->getIterator());
+	}
+
+/**
  * Tests exec method
  *
  * @return void
  */
-	public function testExecute() {
+	public function testExec() {
 		$expected = array(
 			array(
 				'Article' => array('id' => 1)
@@ -274,9 +281,10 @@ class StackableFinderTest extends CakeTestCase {
 			->will($this->returnValue($finder));
 
 		$finder->expects($this->at(1))
-			->method('exec');
+			->method('exec')
+			->will($this->returnValue('dummy'));
 
-		$finder->first();
+		$this->assertEquals('dummy', $finder->first());
 	}
 
 /**
@@ -292,9 +300,23 @@ class StackableFinderTest extends CakeTestCase {
 			->will($this->returnValue($finder));
 
 		$finder->expects($this->at(1))
-			->method('exec');
+			->method('exec')
+			->will($this->returnValue('dummy'));
 
-		$finder->count();
+		$this->assertEquals('dummy', $finder->count());
+	}
+
+/**
+ * Tests toArray method
+ */
+	public function testToArray() {
+		$finder = $this->getMock('StackableFinder', array('find', 'exec'), array($this->Article));
+
+		$finder->expects($this->at(0))
+			->method('exec')
+			->will($this->returnValue('dummy'));
+
+		$this->assertEquals(array('dummy'), $finder->toArray());
 	}
 
 /**
@@ -341,6 +363,55 @@ class StackableFinderTest extends CakeTestCase {
 			array('before', 1, 0),
 			array('after', 0, 1),
 		);
+	}
+
+/**
+ * Tests that option handlers work
+ *
+ * @return void
+ */
+	public function testOptionHandlers() {
+		$options = 
+			$this->StackableFinder
+				->select(array('user_id', 'COUNT(*)'))
+				->join(array(
+					array(
+						'type' => 'INNER',
+						'table' => 'users',
+						'alias' => 'User',
+						'conditions' => 'User.id = Article.user_id',
+					),
+				))
+				->contain('Comment')
+				->where(array('published' => 1))
+				->group('user_id')
+				->order(array('user_id' => 'ASC'))
+				->limit(15)
+				->offset(0)
+				->page(1)
+			->getOptions();
+
+		$expected = array(
+			'fields' => array('user_id', 'COUNT(*)'),
+			'joins' => array(
+				array(
+					'type' => 'INNER',
+					'table' => 'users',
+					'alias' => 'User',
+					'conditions' => 'User.id = Article.user_id',
+				),
+			),
+			'contain' => 'Comment',
+			'conditions' => array('published' => 1),
+			'group' => 'user_id',
+			'order' => array('user_id' => 'ASC'),
+			'limit' => 15,
+			'offset' => 0,
+			'page' => 1,
+			'callbacks' => true, // Default
+		);
+
+		$this->assertEquals($expected, $options);
 	}
 
 /**

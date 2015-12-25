@@ -7,7 +7,7 @@ App::uses('StackableFinderOptions', 'StackableFinder.Model');
  *
  * @final Use compotition instead of inheritance.
  */
-class StackableFinder {
+class StackableFinder implements IteratorAggregate {
 
 /**
  * @var Model
@@ -35,7 +35,7 @@ class StackableFinder {
 	}
 
 /**
- * Handles magic finders and option setting methods
+ * Handles magic finders and magic options
  *
  * @param string $name Name of method to call
  * @param array $args Arguments for the method
@@ -44,21 +44,16 @@ class StackableFinder {
  * @throws BadMethodCallException
  */
 	public function __call($name, $args) {
+		// Handle magic finders
 		if (preg_match('/^find(\w*)By(.+)/', $name)) {
-			// Magic finder
 			$db = $this->model->getDataSource();
 			if ($db instanceof DboSource) {
 				return $db->query($name, $args, $this);
 			} else {
 				throw new BadMethodCallException(sprintf('Datasource %s does not support magic find', get_class($db)));
 			}
-		} else {
-			$callable = array($this->options, $name);
-			if (is_callable($callable)) {
-				call_user_func_array($callable, $args);
-				return $this;
-			}
 		}
+
 		throw new BadMethodCallException(sprintf('Method %s::%s does not exist', get_class($this), $name));
 	}
 
@@ -87,18 +82,21 @@ class StackableFinder {
 	public function __get($name) {
 		switch ($name) {
 			case 'alias':
-				// Hack for DboSource::query()
-				return $this->model->alias;
-			case 'type':
-				// Hack for DboSource::conditionKeysToString()
-				return 'expression';
+				return $this->model->alias; // Hack for DboSource::query()
+			case 'type': 
+				return 'expression'; // Hack for DboSource::conditionKeysToString()
 			case 'value':
-				// Hack for DboSource::conditionKeysToString()
-				return '(' . $this->sql() . ')';
+				return '(' . $this->sql() . ')'; // Hack for DboSource::conditionKeysToString()
 		}
 
-		$class = get_class($this);
-		trigger_error("Undefined property: $class::$name", E_USER_NOTICE);
+		trigger_error(sprintf("Undefined property: %s::%s", get_class($this), $name), E_USER_NOTICE);
+	}
+
+/**
+ * Executes query and returns the iterator.
+ */
+	public function getIterator() {
+		return new ArrayIterator($this->toArray());
 	}
 
 /**
@@ -114,7 +112,8 @@ class StackableFinder {
 		$method = '_find' . ucfirst($type);
 
 		$this->options->applyOptions($options);
-		$options = $this->model->dispatchMethod($method, array('before', $this->options->getOptions()));
+		$options = $this->options->getOptions();
+		$options = $this->model->dispatchMethod($method, array('before', $options));
 		$this->options->setOptions($options);
 
 		$this->stack[] = $method;
@@ -123,7 +122,7 @@ class StackableFinder {
 	}
 
 /**
- * 3.x compatible. Same as `$finder->find('first')->exec()`.
+ * Same as `$q->find('first')->exec()`.
  *
  * @return mixed
  */
@@ -132,12 +131,21 @@ class StackableFinder {
 	}
 
 /**
- * 3.x compatible. Same as `$finder->find('first')->exec()`.
+ * 3.x compatible. Same as `$q->find('first')->exec()`.
  *
- * @return mixed
+ * @return mixed 
  */
 	public function first() {
 		return $this->find('first')->exec();
+	}
+
+/**
+ * 3.x compatible. Same as `(array)$q->exec()`.
+ *
+ * @return mixed
+ */
+	public function toArray() {
+		return (array)$this->exec();
 	}
 
 /**
@@ -176,4 +184,72 @@ class StackableFinder {
 		$options = $this->options->getOptions();
 		return $db->buildAssociationQuery($this->model, $options);
 	}
+
+/**
+ * Delegates StackableFinderOptions::getOptions().
+ *
+ * @return array
+ */
+	public function getOptions() {
+		return $this->options->getOptions();
+	}
+
+/**
+ * Delegatets StackableFinderOptions::applyOpiton().
+ * Returns $this for fluent interface.
+ *
+ * @param $name
+ * @param $value
+ * @return $this For fluen
+ * @see StackableFinderOptions::applyOption()
+ */
+	private function applyOption($name, $value) {
+		$this->options->applyOption($name, $value);
+		return $this;
+	}
+
+/**
+ * 3.x compatible.
+ *
+ * @return $this
+ */
+/** #@+ */ 
+// @codingStandardsIgnoreStart
+	public function where($option) {
+		return $this->applyOption('conditions', $option);
+	}
+
+	public function contain($option) {
+		return $this->applyOption('contain', $option);
+	}
+
+	public function join($option) {
+		return $this->applyOption('joins', $option);
+	}
+
+	public function select($option) {
+		return $this->applyOption('fields', $option);
+	}
+
+	public function order($option) {
+		return $this->applyOption('order', $option);
+	}
+
+	public function group($option) {
+		return $this->applyOption('group', $option);
+	}
+
+	public function limit($option) {
+		return $this->applyOption('limit', $option);
+	}
+
+	public function offset($option) {
+		return $this->applyOption('offset', $option);
+	}
+
+	public function page($option) {
+		return $this->applyOption('page', $option);
+	}
+// @codingStandardsIgnoreEnd
+/** #@- */
 }

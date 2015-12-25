@@ -38,64 +38,41 @@ class StackableFinderOptionsTest extends CakeTestCase {
 	}
 
 /**
- * Tests that applyOptions method calls setters correctly
- *
- * @param string $option The query option name.
- * @param string $method The setter for the query option.
- *
- * @return void
- *
- * @dataProvider dataProviderForTestOptionSetters
+ * Tests getOptions() method.
  */
-	public function testOptionSetters($option, $method) {
-		$finder = $this->getMock('StackableFinderOptions', array($method));
-
-		$value = 'something';
-
-		$finder->expects($this->once())
-			->method($method)
-			->with($value);
-
-		$finder->applyOptions(array($option => $value));
-	}
-
-/**
- * Data provider for testOptionSetters
- * 
- * @return array
- */
-	public function dataProviderForTestOptionSetters() {
-		return array(
-			array('fields', 'select'),
-			array('conditions', 'where'),
-			array('joins', 'join'),
-			array('order', 'order'),
-			array('limit', 'limit'),
-			array('offset', 'offset'),
-			array('group', 'group'),
-			array('contain', 'contain'),
-			array('page', 'page'),
+	public function testGetOptions() {
+		$options = $this->StackableFinderOptions->getOptions();
+		$expected = array(
+			'conditions' => null, 
+			'fields' => null, 
+			'joins' => array(),
+			'limit' => null,
+			'offset' => null, 
+			'order' => null,
+			'page' => 1, 
+			'group' => null,
+			'callbacks' => true,
 		);
+		$this->assertEquals($expected, $options);
 	}
 
 /**
  * Tests each query option stacking correctly
  *
- * @param array $first First query option
- * @param array $second Second query option
+ * @param array $values Query options
  * @param array $expected Expected
  *
  * @return array
  *
  * @dataProvider dataProviderForTestApplyOptions
  */
-	public function testApplyOptions($first, $second, $expected) {
-		$options = $this->StackableFinderOptions
-			->applyOptions($first)
-			->applyOptions($second)
-			->getOptions();
+	public function testApplyOptions($values, $expected) {
+		$options = $this->StackableFinderOptions;
 
-		$this->assertTrue(Hash::contains($options, $expected));
+		foreach ($values as $value) {
+			$options->applyOptions($value);
+		}
+		$this->assertTrue(Hash::contains($options->getOptions(), $expected));
 	}
 
 /**
@@ -107,34 +84,40 @@ class StackableFinderOptionsTest extends CakeTestCase {
 		return array(
 			// conditions
 			array(
-				array('conditions' => array('user_id' => 1)),
-				array('conditions' => array('published' => 'Y')),
+				array( 
+					array('conditions' => array('user_id' => 1)),
+					array('conditions' => array('published' => 'Y')) 
+				),
 				array('conditions' => array('AND' => array(array('user_id' => 1), array('published' => 'Y'))))
 			),
 			// fields
 			array(
-				array('fields' => array('id')),
-				array('fields' => 'title'),
+				array(
+					array('fields' => array('id')),
+					array('fields' => 'title'),
+				),
 				array('fields' => array('id', 'title'))
 			),
 			// joins
 			array(
-				array('joins' => array(
-					array(
-						'type' => 'INNER',
-						'table' => 'users',
-						'alias' => 'User',
-						'conditions' => 'User.id = Article.user_id',
-					),
-				)),
-				array('joins' => array(
-					array(
-						'type' => 'LEFT',
-						'table' => 'comments',
-						'alias' => 'Comment',
-						'conditions' => 'Comment.article_id = Article.id',
-					),
-				)),
+				array(
+					array('joins' => array(
+						array(
+							'type' => 'INNER',
+							'table' => 'users',
+							'alias' => 'User',
+							'conditions' => 'User.id = Article.user_id',
+						),
+					)),
+					array('joins' => array(
+						array(
+							'type' => 'LEFT',
+							'table' => 'comments',
+							'alias' => 'Comment',
+							'conditions' => 'Comment.article_id = Article.id',
+						),
+					)),
+				),
 				array('joins' => array(
 					array(
 						'type' => 'INNER',
@@ -152,52 +135,67 @@ class StackableFinderOptionsTest extends CakeTestCase {
 			),
 			// limit
 			array(
-				array('limit' => 10),
-				array('limit' => 20),
+				array(
+					array('limit' => 10),
+					array('limit' => 20),
+				),
 				array('limit' => 20),
 			),
 			// offset
 			array(
-				array('offset' => 10),
-				array('offset' => 20),
+				array(
+					array('offset' => 10),
+					array('offset' => 20),
+				),
 				array('offset' => 20),
 			),
 			// order
 			array(
-				array('order' => 'user_id'),
-				array('order' => array('modified' => 'DESC')),
+				array(
+					array('order' => 'user_id'),
+					array('order' => array('modified' => 'DESC')),
+				),
 				array('order' => array('user_id', 'modified' => 'DESC')),
 			),
 			// page
 			array(
-				array('page' => 1),
-				array('page' => 2),
+				array(
+					array('page' => 1),
+					array('page' => 2),
+				),
 				array('page' => 2),
 			),
 			// group
 			array(
-				array('group' => 'user_id'),
+				array(
+					array('group' => 'user_id'),
 				array('group' => 'published'),
+				),
 				array('group' => array('user_id', 'published')),
 			),
 			// callbacks
 			array(
-				array('callbacks' => 'before'),
-				array('callbacks' => 'after'),
+				array(
+					array('callbacks' => 'before'),
+					array('callbacks' => 'after'),
+				),
 				array('callbacks' => 'after'),
 			),
 			// something
 			array(
-				array('something' => true),
-				array('something' => false),
+				array(
+					array('something' => true),
+					array('something' => false),
+				),
 				array('something' => false),
 			),
 			array(
-				array('something' => true),
-				array('something' => null),
+				array(
+					array('something' => true),
+					array('something' => null),
+				),
 				array('something' => true),
 			),
 		);
 	}
-
 }

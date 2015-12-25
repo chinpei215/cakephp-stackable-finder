@@ -66,6 +66,26 @@ class StackableFinderBehaviorTest extends CakeTestCase {
 	}
 
 /**
+ * Tests that IteratorAggregate is implemented
+ */
+	public function testIteratorImplemented() {
+		$this->loadFixtures('Article');
+		$Article = ClassRegistry::init('Article');
+
+		$q = $Article->q()->select(array('title'));
+
+		$results = iterator_to_array($q);
+
+		$expected = array(
+			array('Article' => array('title' => 'First Article')),
+			array('Article' => array('title' => 'Second Article')),
+			array('Article' => array('title' => 'Third Article')),
+		);
+		
+		$this->assertSame($expected, $results);
+	}
+
+/**
  * Tests a combination of published and first
  *
  * @return void

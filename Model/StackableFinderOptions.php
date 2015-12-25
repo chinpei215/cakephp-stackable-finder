@@ -5,13 +5,20 @@ App::uses('Hash', 'Utility');
  * StackableFinderOptions class
  *
  * @final Use compotition instead of inheritance.
- * @internal This is an inner class of StackableFinder class.
+ * @internal This is an back-end class of StackableFinder class.
  */
 class StackableFinderOptions {
 
 	private $options = array(  // @codingStandardsIgnoreLine
-		'conditions' => null, 'fields' => null, 'joins' => array(), 'limit' => null,
-		'offset' => null, 'order' => null, 'page' => 1, 'group' => null, 'callbacks' => true,
+		'conditions' => null, 
+		'fields' => null, 
+		'joins' => array(),
+		'limit' => null,
+		'offset' => null, 
+		'order' => null,
+		'page' => 1, 
+		'group' => null,
+		'callbacks' => true,
 	);
 
 /**
@@ -27,111 +34,63 @@ class StackableFinderOptions {
  * Overwrites the all current query options.
  *
  * @param array $options Query options.
- *
- * @return $this
+ * @return void
  */
 	public function setOptions(array $options) {
-		$this->options = $options;
-		return $this;
+		$this->options = $options + $this->options;
 	}
 
 /**
  * Merges or sets query options
  *
  * @param array $options Query options.
- * @return $this
+ * @return void
  */
 	public function applyOptions(array $options) {
-		$methods = array(
-			'fields' => 'select',
-			'conditions' => 'where',
-			'joins' => 'join',
-			'order' => 'order',
-			'limit' => 'limit',
-			'offset' => 'offset',
-			'group' => 'group',
-			'contain' => 'contain',
-			'page' => 'page',
-		);
-
-		foreach ($options as $key => $value) {
-			if (isset($methods[$key])) {
-				$method = $methods[$key];
-				$this->{$method}($value);
-			} else {
-				$this->setOption($key, $value);
-			}
+		foreach ($options as $name => $value) {
+			$this->applyOption($name, $value);
 		}
-
-		return $this;
-	}
-
-	public function where($conditions) { // @codingStandardsIgnoreLine
-		if (isset($this->options['conditions'])) {
-			$conditions = array('AND' => array($this->options['conditions'], $conditions));
-		}
-		return $this->setOption('conditions', $conditions);
-	}
-
-	public function contain($associations) { // @codingStandardsIgnoreLine
-		return $this->mergeOption('contain', $associations);
-	}
-
-	public function join($tables) { // @codingStandardsIgnoreLine
-		return $this->mergeOption('joins', $tables);
-	}
-
-	public function select($fields) { // @codingStandardsIgnoreLine
-		return $this->mergeOption('fields', $fields);
-	}
-
-	public function order($fields) { // @codingStandardsIgnoreLine
-		return $this->mergeOption('order', $fields);
-	}
-
-	public function group($fields) { // @codingStandardsIgnoreLine
-		return $this->mergeOption('group', $fields);
-	}
-
-	public function limit($num) { // @codingStandardsIgnoreLine
-		return $this->setOption('limit', $num);
-	}
-
-	public function offset($num) { // @codingStandardsIgnoreLine
-		return $this->setOption('offset', $num);
-	}
-
-	public function page($num) { // @codingStandardsIgnoreLine
-		return $this->setOption('page', $num);
 	}
 
 /**
- * Marges a query option into the stack
+ * Merges or sets a single query option
  *
- * @param array $key The type of the query option
- * @param array $value The value of the query option
- *
- * @return $this
+ * @param string $name The name of the query option
+ * @param mixed $value The value of the query option
+ * @return void
  */
-	private function mergeOption($key, $value) { // @codingStandardsIgnoreLine
-		if (isset($this->options[$key])) {
-			$value = array_merge((array)$this->options[$key], (array)$value);
+	public function applyOption($name, $value) {
+		switch ($name) {
+			case 'conditions':
+				if (isset($this->options['conditions'])) {
+					$value = array('AND' => array($this->options['conditions'], $value));
+				}
+				return $this->setOption($name, $value);
+			case 'fields':
+			case 'joins':
+			case 'contain':
+			case 'order':
+			case 'group':
+				return $this->setOption($name, $value, true);
+			default:
+				return $this->setOption($name, $value);
 		}
-		return $this->setOption($key, $value);
 	}
 
 /**
  * Sets a query option
  *
- * @param array $key The type of the query option
- * @param array $value The value of the query option
- *
+ * @param string $name The name of the query option
+ * @param mixed $value The value of the query option
+ * @param bool $merge Optional. The value should be merged or not.
  * @return $this
  */
-	private function setOption($key, $value) { // @codingStandardsIgnoreLine
+	private function setOption($name, $value, $merge = false) { // @codingStandardsIgnoreLine
 		if ($value !== null) {
-			$this->options[$key] = $value;
+			if ($merge && isset($this->options[$name])) {
+				$value = array_merge((array)$this->options[$name], (array)$value);
+			}
+			$this->options[$name] = $value;
 		}
-		return $this;
 	}
 }
