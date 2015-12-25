@@ -39,7 +39,7 @@ $articles = $this->Article->q()
 	->select(['Article.id', 'Article.title'])
 	->contain('Author')
 	->where(['Article.user_id' => 1])
-	->order('Article.id' => 'DESC')
+	->order(['Article.id' => 'DESC'])
 	->limit(10)
 	->offset(0)
 	->exec();
