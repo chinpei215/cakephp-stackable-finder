@@ -57,7 +57,7 @@ $articles = $this->Article->q()
 
 You can make subqueries like the following:
 ```
-$q = $this->User->q()->select(['id']);
+$q = $this->User->q()->select('id');
 
 $articles = $this->Article->q()
 	->where([
