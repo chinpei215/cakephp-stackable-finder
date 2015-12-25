@@ -24,7 +24,7 @@ class StackableFinder {
 /**
  * Constructor
  *
- * This is the internal constructor. Use `do` instead.
+ * This is the internal constructor. Use `q` instead.
  *
  * @param Model $model The model to find
  * @internal
@@ -103,7 +103,7 @@ class StackableFinder {
 
 /**
  * Executes finder. The `before` state is executed immediately. 
- * The `after` state is not executed until `done` method is called.
+ * The `after` state is not executed until `exec` method is called.
  *
  * @param string $type Type of find operation
  * @param array $options Option fields
@@ -123,21 +123,21 @@ class StackableFinder {
 	}
 
 /**
- * 3.x compatible. Same as `$finder->find('first')->done()`.
+ * 3.x compatible. Same as `$finder->find('first')->exec()`.
  *
  * @return mixed
  */
 	public function count() {
-		return $this->find('count')->done();
+		return $this->find('count')->exec();
 	}
 
 /**
- * 3.x compatible. Same as `$finder->find('first')->done()`.
+ * 3.x compatible. Same as `$finder->find('first')->exec()`.
  *
  * @return mixed
  */
 	public function first() {
-		return $this->find('first')->done();
+		return $this->find('first')->exec();
 	}
 
 /**
@@ -146,13 +146,24 @@ class StackableFinder {
  *
  * @return array
  */
-	public function done() {
+	public function exec() {
 		$options = $this->options->getOptions();
 		$results = $this->model->find('all', $options);
 		foreach ($this->stack as $method) {
 			$results = $this->model->dispatchMethod($method, array('after', $options, $results));
 		}
 		return $results;
+	}
+
+/**
+ * Executes stacked finders and returns the results.
+ * `Model::find()` and the after states of the finders are executed at this time.
+ *
+ * @return array
+ * @deprecated Use `exec` instead. This method will be removed in 0.3.0
+ */
+	public function done() {
+		return $this->exec();
 	}
 
 /**

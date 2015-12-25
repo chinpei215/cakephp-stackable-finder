@@ -9,31 +9,42 @@ App::uses('StackableFinder', 'StackableFinder.Model');
  * ### Example:
  *
  * ```
- * $Model
- *   ->do()
- *     ->find('published')
- *     ->find('list')
- *   ->done();
+ * $this->Article->q()
+ *   ->find('published')
+ *   ->find('list')
+ *   ->all();
  *
  * ```
  *
+ * @final Use compotition instead of inheritance.
  */
 class StackableFinderBehavior extends ModelBehavior {
 
 	public $mapMethods = array(
-		'/^do$/' => '_doStacking',
+		'/^q$/' => '_query',
+		'/^do$/' => '_doStacking', // Deprecated
 	);
 
 /**
  * Starts stacking finders. 
- * This is an internal method. Use `do` instead.
+ * This is an internal method. Use `q` instead.
  *
- * @param Model $Model Model using the behavior
+ * @param Model $model Model using the behavior
+ * @return StackableFinder
  * @internal
+ */
+	public function _query(Model $model) { // @codingStandardsIgnoreLine
+		return new StackableFinder($model);
+	}
+
+/**
+ * Starts stacking finders.
  *
+ * @param Model $model Model using the behavior
+ * @deprecated Use `q` instead. This method will be removed in 0.3.0
  * @return StackableFinder
  */
-	public function _doStacking(Model $Model) { // @codingStandardsIgnoreLine
-		return new StackableFinder($Model);
+	public function _doStacking(Model $model) { // @codingStandardsIgnoreLine
+		return $this->_query($model);
 	}
 }

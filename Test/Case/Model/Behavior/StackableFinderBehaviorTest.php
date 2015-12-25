@@ -56,6 +56,16 @@ class StackableFinderBehaviorTest extends CakeTestCase {
 	}
 
 /**
+ * Tests query method
+ *
+ * @return void
+ */
+	public function testQuery() {
+		$Article = ClassRegistry::init('Article');
+		$this->assertInstanceOf('StackableFinder', $Article->q());
+	}
+
+/**
  * Tests a combination of published and first
  *
  * @return void
@@ -71,11 +81,10 @@ class StackableFinderBehaviorTest extends CakeTestCase {
 			)
 		);
 
-		$results = $Article
-			->do()
-				->find('published', array('fields' => array('id', 'title')))
-				->find('first')
-			->done();
+		$results = $Article->q()
+			->find('published', array('fields' => array('id', 'title')))
+			->find('first')
+			->exec();
 
 		$this->assertEquals($expected, $results);
 	}
@@ -91,11 +100,10 @@ class StackableFinderBehaviorTest extends CakeTestCase {
 
 		$expected = 5;
 
-		$results = $Comment
-			->do()
-				->find('published')
-				->find('count')
-			->done();
+		$results = $Comment->q()
+			->find('published')
+			->find('count')
+			->exec();
 		$this->assertEquals($expected, $results);
 	}
 
@@ -115,11 +123,10 @@ class StackableFinderBehaviorTest extends CakeTestCase {
 			6 => 'Second Comment for Second Article',
 		);
 
-		$results = $Comment
-			->do()
-				->find('published')
-				->find('list')
-			->done();
+		$results = $Comment->q()
+			->find('published')
+			->find('list')
+			->exec();
 		$this->assertEquals($expected, $results);
 	}
 
@@ -166,16 +173,15 @@ class StackableFinderBehaviorTest extends CakeTestCase {
 			)
 		);
 
-		$results = $Article
-			->do()
-				->find('all', array('contain' => array(
-					'User' => array('fields' => array('id', 'user'))
-				)))
-				->find('all', array('contain' => array(
-					'Comment' => array('fields' => array('id', 'article_id', 'comment'))
-				)))
-				->find('first', array('fields' => array('id', 'user_id', 'title')))
-			->done();
+		$results = $Article->q()
+			->find('all', array('contain' => array(
+				'User' => array('fields' => array('id', 'user'))
+			)))
+			->find('all', array('contain' => array(
+				'Comment' => array('fields' => array('id', 'article_id', 'comment'))
+			)))
+			->find('first', array('fields' => array('id', 'user_id', 'title')))
+			->exec();
 
 		$this->assertEquals($expected, $results);
 	}
@@ -195,7 +201,7 @@ class StackableFinderBehaviorTest extends CakeTestCase {
 			->select(array('id', 'user'))
 			->where(array('id NOT IN ?' => array($q)));
 
-		$users = $query->done();
+		$users = $query->exec();
 		$expected = array(
 			array('User' => array('id' => 2, 'user' => 'nate')),
 			array('User' => array('id' => 4, 'user' => 'garrett')),

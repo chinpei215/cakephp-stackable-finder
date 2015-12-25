@@ -82,11 +82,11 @@ class StackableFinderTest extends CakeTestCase {
 	}
 
 /**
- * Tests done method
+ * Tests exec method
  *
  * @return void
  */
-	public function testDone() {
+	public function testExecute() {
 		$expected = array(
 			array(
 				'Article' => array('id' => 1)
@@ -98,7 +98,19 @@ class StackableFinderTest extends CakeTestCase {
 			->with('all')
 			->will($this->returnValue($expected));
 
-		$this->assertEquals($expected, $this->StackableFinder->done());
+		$this->assertEquals($expected, $this->StackableFinder->exec());
+	}
+
+/**
+ * Tests done method
+ *
+ * @return void
+ */
+	public function testDone() { 
+		$finder = $this->getMock('StackableFinder', array('exec'), array($this->Article));
+		$finder->expects($this->once())
+			->method('exec');
+		$finder->done();
 	}
 
 /**
@@ -188,7 +200,7 @@ class StackableFinderTest extends CakeTestCase {
 			->find('all', array('conditions' => '1 = 1'))
 			->find('list', array('conditions' => array('created >=' => '2001-01-01')))
 			->find('first', array('conditions' => array('created >=' => '2002-02-02')))
-			->done();
+			->exec();
 	}
 
 /**
@@ -255,14 +267,14 @@ class StackableFinderTest extends CakeTestCase {
  * @return void
  */
 	public function testFirst() {
-		$finder = $this->getMock('StackableFinder', array('find', 'done'), array($this->Article));
+		$finder = $this->getMock('StackableFinder', array('find', 'exec'), array($this->Article));
 		$finder->expects($this->at(0))
 			->method('find')
 			->with('first')
 			->will($this->returnValue($finder));
 
 		$finder->expects($this->at(1))
-			->method('done');
+			->method('exec');
 
 		$finder->first();
 	}
@@ -273,14 +285,14 @@ class StackableFinderTest extends CakeTestCase {
  * @return void
  */
 	public function testCount() {
-		$finder = $this->getMock('StackableFinder', array('find', 'done'), array($this->Article));
+		$finder = $this->getMock('StackableFinder', array('find', 'exec'), array($this->Article));
 		$finder->expects($this->at(0))
 			->method('find')
 			->with('count')
 			->will($this->returnValue($finder));
 
 		$finder->expects($this->at(1))
-			->method('done');
+			->method('exec');
 
 		$finder->count();
 	}
@@ -314,7 +326,7 @@ class StackableFinderTest extends CakeTestCase {
 			->method('afterFind');
 
 		$finder = new StackableFinder($Article);
-		$finder->find('all', array('callbacks' => $callbacks))->find('all')->done();
+		$finder->find('all', array('callbacks' => $callbacks))->find('all')->exec();
 	}
 
 /**

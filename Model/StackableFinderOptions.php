@@ -5,7 +5,7 @@ App::uses('Hash', 'Utility');
  * StackableFinderOptions class
  *
  * @final Use compotition instead of inheritance.
- * @internal
+ * @internal This is an inner class of StackableFinder class.
  */
 class StackableFinderOptions {
 
