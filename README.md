@@ -17,49 +17,62 @@
 
 ## Usage
 
-You can start stacking finders by calling `do`:
+By calling `q()`, You can start stacking finders:
 ```php
-$articles = $this->Article
-	->do()
-		->find('all', ['conditions' => ['Article.created >=' => '2015-01-01']])
-		->findAllByUserId(1) // Magic finder
-		->find('published') // Custom finder
-		->find('list')
-	->done();
+$articles = $this->Article->q()
+	->find('all', ['conditions' => ['Article.created >=' => '2015-01-01']])
+	->findAllByUserId(1) // Magic finder
+	->find('published') // Custom finder
+	->find('list')
+	->exec();
 ```
-And by calling `done`, you can execute the query and get the resutls.
+And by calling `exec()`, you can execute the query and get the resutls.
 
-For compatibility and convenience, you can use `first` or `count` instead of `done`.
+For compatibility and convenience, you can use `first()` or `count()` instead of `exec()`.
 ```php
-$articles = $this->Article
-	->do()
-		->find('published')
-		->first();
+$articles = $this->Article->q()
+	->find('published')
+	->first();
 ```
 This is same as the following:
 ```php
-$articles = $this->Article
-	->do()
-		->find('published')
-		->find('first')
-	->done();
+$articles = $this->Article->q()
+	->find('published')
+	->find('first')
+	->exec();
 ```
 
-You can also use `where` or such setters for query options.
+You can also use `where()` or such setters for query options.
 ```
-$articles = $this->Article
-	->do()
-		->select(['Article.id', 'Article.title'])
-		->contain('Author')
-		->where(['Article.user_id' => 1])
-		->order('Article.id' => 'DESC')
-		->limit(10)
-		->offset(0)
-	->done();
+$articles = $this->Article->q()
+	->select(['Article.id', 'Article.title'])
+	->contain('Author')
+	->where(['Article.user_id' => 1])
+	->order('Article.id' => 'DESC')
+	->limit(10)
+	->offset(0)
+	->exec();
+```
+### Subqueries
+
+You can make subqueries like the following:
+```
+$q = $this->User->q()->select(['id']);
+
+$articles = $this->Article->q()
+	->where([
+		'user_id IN ?' => [$q]
+	])
+	->exec();
 ```
 
-## Limitation
+You will see that `IN ?` appears after the field name in the left-hand side. 
+And you will see also that `$q` appears inside an `[]` in the right-hand side.
+It is not compatible with 3.x but it is nessecary at this time.
 
-Note that stacking `first` after `list` doen't work as you expected. Because `_findFirst` doen't returns the _first_ result actually. That returns the element with index `0`.
-Also note that stacking `count` after `list` doesn't work. Because `_findCount` expects an array like `[['Model' => ['count' => N ]]]`, but `_findList` changes the array before it called. 
+### Limitation
+
+Note that stacking `find('first')` after `find('list')` doen't work as you expected. Because `_findFirst()` doen't returns the _first_ result actually. That returns the element with index `0`.
+
+Also note that stacking `find('count')` after `find('list')` doesn't work. Because `_findCount()` expects an array like `[['Model' => ['count' => N ]]]`, but `_findList` changes the array before it called. 
 You can override them in your model to change the behaviors, if necessary.
