@@ -17,7 +17,6 @@
 
 ## Usage
 
-By calling `q()`, You can start stacking finders:
 ```php
 $articles = $this->Article->q()
 	->find('all', ['conditions' => ['Article.created >=' => '2015-01-01']])
@@ -26,23 +25,15 @@ $articles = $this->Article->q()
 	->find('list')
 	->exec();
 ```
-And by calling `exec()`, you can execute the query and get the resutls.
+You can start stacking finders by calling `q()`, and you can execute the query and get the resutls by calling `exec()`.
 
-For compatibility and convenience, you can use `first()` or `count()` instead of `exec()`.
-```php
-$articles = $this->Article->q()
-	->find('published')
-	->first();
-```
-This is same as the following:
-```php
-$articles = $this->Article->q()
-	->find('published')
-	->find('first')
-	->exec();
-```
+Note that `q()` method returns an instance of `StackableFinder`. The object also has `find()` method like a Model - so you can use fluent interface, but it is not a sub-class of Model.
 
-You can also use `where()` or such setters for query options.
+So you cannot call any other methods implemented by Model.
+```
+$this->Article->->q()->read(); // Error 
+```
+Instead, you can use `where()` or some other 3.x compatible methods for building queries.
 ```
 $articles = $this->Article->q()
 	->select(['Article.id', 'Article.title'])
@@ -53,6 +44,7 @@ $articles = $this->Article->q()
 	->offset(0)
 	->exec();
 ```
+
 ### Subqueries
 
 You can make subqueries like the following:
@@ -66,13 +58,47 @@ $articles = $this->Article->q()
 	->exec();
 ```
 
-You will see that `IN ?` appears after the field name in the left-hand side. 
-And you will see also that `$q` appears inside an `[]` in the right-hand side.
-It is not compatible with 3.x but it is nessecary at this time.
+You will see that `IN ?` appears after the field name in the left-hand side, and you will see also that `$q` appears inside an `[]` in the right-hand side.
 
-### Limitation
+It is not compatible with 3.x but it is nessecary at this time in 2.x.
 
-Note that stacking `find('first')` after `find('list')` doen't work as you expected. Because `_findFirst()` doen't returns the _first_ result actually. That returns the element with index `0`.
+### Getting results
 
-Also note that stacking `find('count')` after `find('list')` doesn't work. Because `_findCount()` expects an array like `[['Model' => ['count' => N ]]]`, but `_findList` changes the array before it called. 
-You can override them in your model to change the behaviors, if necessary.
+As mentioned above, you can do it by calling `exec()` but there are some other ways to get the results of the query.
+
+You can iterate the `StackableFinder` object directly.
+```
+$q = $this->Article->q()->find('list');
+foreach ($q as $id => $title) {
+	// ...
+}
+```
+Or you can use `first()` or `count()` instead of `exec()`.
+```php
+$articles = $this->Article->q()
+	->find('published')
+	->first();
+```
+This is same as the following:
+```php
+$articles = $this->Article->q()
+	->find('published')
+	->find('first')
+	->exec();
+```
+
+But, note that stacking `find('first')` or `first()` after `find('list')` doesn't work.
+Because `_findFirst()` doen't returns the _first_ result actually. That returns the element with index `0`.
+
+So this is a bad example:
+```
+$articles = $this->Article->q()
+	->find('list')
+	->first();
+```
+You will get an empty array instead of the first item of the list.
+
+Also note that stacking `find('count')` or `count()` after `find('list')` doesn't work.
+Because `_findCount()` expects an array like `[['Model' => ['count' => N ]]]`, but `_findList` changes the array before it called. 
+
+You can override thease methods in your model to change the behaviors, if necessary.
