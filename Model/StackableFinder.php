@@ -83,7 +83,7 @@ class StackableFinder implements IteratorAggregate {
 		switch ($name) {
 			case 'alias':
 				return $this->model->alias; // Hack for DboSource::query()
-			case 'type': 
+			case 'type':
 				return 'expression'; // Hack for DboSource::conditionKeysToString()
 			case 'value':
 				return '(' . $this->sql() . ')'; // Hack for DboSource::conditionKeysToString()
@@ -94,6 +94,8 @@ class StackableFinder implements IteratorAggregate {
 
 /**
  * Executes query and returns the iterator.
+ *
+ * @return Traversable
  */
 	public function getIterator() {
 		return new ArrayIterator($this->toArray());
@@ -198,12 +200,12 @@ class StackableFinder implements IteratorAggregate {
  * Delegatets StackableFinderOptions::applyOpiton().
  * Returns $this for fluent interface.
  *
- * @param $name
- * @param $value
- * @return $this For fluen
+ * @param string $name The name of the option.
+ * @param mixed $value The value of the option.
+ * @return $this
  * @see StackableFinderOptions::applyOption()
  */
-	private function applyOption($name, $value) {
+	private function applyOption($name, $value) { // @codingStandardsIgnoreLine
 		$this->options->applyOption($name, $value);
 		return $this;
 	}
@@ -213,8 +215,8 @@ class StackableFinder implements IteratorAggregate {
  *
  * @return $this
  */
-/** #@+ */ 
 // @codingStandardsIgnoreStart
+/** #@+ */ 
 	public function where($option) {
 		return $this->applyOption('conditions', $option);
 	}
@@ -250,6 +252,6 @@ class StackableFinder implements IteratorAggregate {
 	public function page($option) {
 		return $this->applyOption('page', $option);
 	}
-// @codingStandardsIgnoreEnd
 /** #@- */
+// @codingStandardsIgnoreEnd
 }

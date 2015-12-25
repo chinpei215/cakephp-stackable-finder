@@ -11,12 +11,12 @@ class StackableFinderOptions {
 
 	private $options = array(  // @codingStandardsIgnoreLine
 		'conditions' => null, 
-		'fields' => null, 
+		'fields' => null,
 		'joins' => array(),
 		'limit' => null,
-		'offset' => null, 
+		'offset' => null,
 		'order' => null,
-		'page' => 1, 
+		'page' => 1,
 		'group' => null,
 		'callbacks' => true,
 	);

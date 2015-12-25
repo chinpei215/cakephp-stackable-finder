@@ -82,6 +82,8 @@ class StackableFinderTest extends CakeTestCase {
 
 /**
  * Tests getIterator method
+ *
+ * @return void
  */
 	public function testGetIterator() {
 		$this->Article->expects($this->once())->method('find');
@@ -113,7 +115,7 @@ class StackableFinderTest extends CakeTestCase {
  *
  * @return void
  */
-	public function testDone() { 
+	public function testDone() {
 		$finder = $this->getMock('StackableFinder', array('exec'), array($this->Article));
 		$finder->expects($this->once())
 			->method('exec');
@@ -308,6 +310,8 @@ class StackableFinderTest extends CakeTestCase {
 
 /**
  * Tests toArray method
+ *
+ * @return void
  */
 	public function testToArray() {
 		$finder = $this->getMock('StackableFinder', array('find', 'exec'), array($this->Article));
@@ -371,7 +375,7 @@ class StackableFinderTest extends CakeTestCase {
  * @return void
  */
 	public function testOptionHandlers() {
-		$options = 
+		$options =
 			$this->StackableFinder
 				->select(array('user_id', 'COUNT(*)'))
 				->join(array(

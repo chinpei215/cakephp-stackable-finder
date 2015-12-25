@@ -39,17 +39,19 @@ class StackableFinderOptionsTest extends CakeTestCase {
 
 /**
  * Tests getOptions() method.
+ *
+ * @return void
  */
 	public function testGetOptions() {
 		$options = $this->StackableFinderOptions->getOptions();
 		$expected = array(
-			'conditions' => null, 
-			'fields' => null, 
+			'conditions' => null,
+			'fields' => null,
 			'joins' => array(),
 			'limit' => null,
-			'offset' => null, 
+			'offset' => null,
 			'order' => null,
-			'page' => 1, 
+			'page' => 1,
 			'group' => null,
 			'callbacks' => true,
 		);
@@ -59,11 +61,16 @@ class StackableFinderOptionsTest extends CakeTestCase {
 /**
  * Tests applyOption() method
  *
+ * @param string $name The name of the option.
+ * @param array $values The values to be applied.
+ * @param miexed $expected Expected resutls
+ * @return void
+ *
  * @dataProvider dataProviderForTestApplyOption
  */
 	public function testApplyOption($name, $values, $expected) {
 		$options = $this->StackableFinderOptions;
-		
+
 		foreach ($values as $value) {
 			$options->applyOption($name, $value);
 		}
@@ -82,7 +89,7 @@ class StackableFinderOptionsTest extends CakeTestCase {
 			// conditions
 			array(
 				'conditions',
-				array( 
+				array(
 					array('user_id' => 1),
 					array('published' => 'Y'),
 				),
@@ -191,9 +198,6 @@ class StackableFinderOptionsTest extends CakeTestCase {
 
 /**
  * Tests each query option stacking correctly
- *
- * @param array $values Query options
- * @param array $expected Expected
  *
  * @return array
  */
