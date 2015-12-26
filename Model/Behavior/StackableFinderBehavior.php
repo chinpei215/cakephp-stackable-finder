@@ -12,7 +12,7 @@ App::uses('StackableFinder', 'StackableFinder.Model');
  * $this->Article->q()
  *   ->find('published')
  *   ->find('list')
- *   ->all();
+ *   ->exec();
  *
  * ```
  *

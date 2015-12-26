@@ -5,7 +5,7 @@ App::uses('StackableFinderOptions', 'StackableFinder.Model');
 /**
  * StackableFinder class
  *
- * @final Use compotition instead of inheritance.
+ * @final Use composition instead of inheritance.
  */
 class StackableFinder implements IteratorAggregate {
 
