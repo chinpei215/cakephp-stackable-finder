@@ -8,5 +8,5 @@ class Comment extends AppModel {
 
 	public $displayField = 'comment';
 
-	public $belongsTo = array('Article', 'Comment');
+	public $belongsTo = array('Article', 'User');
 }
