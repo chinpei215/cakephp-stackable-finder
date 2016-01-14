@@ -101,4 +101,4 @@ You will get an empty array instead of the first item of the list.
 Also note that stacking `find('count')` or `count()` after `find('list')` doesn't work.
 Because `_findCount()` expects an array like `[['Model' => ['count' => N ]]]`, but `_findList` changes the array before it get called. 
 
-You can override thease methods in your model to change the behaviors, if necessary.
+You can override these methods in your model to change the behaviors, if necessary.
