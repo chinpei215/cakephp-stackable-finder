@@ -5,30 +5,33 @@ php:
   - 5.4
   - 5.5
   - 5.6
+  - 7.0
 
 env:
   global:
     - PLUGIN_NAME=StackableFinder
     - REQUIRE=""
     - DB=mysql
-    - CAKE_REF=2.7.8
-
-  matrix:
-    - 
-    - CAKE_REF=2.6.12
+    - CAKE_REF=2.8.0
 
 matrix:
   include:
+    - php: 5.3
+      env:
+        - CAKE_REF=2.6.12
+    - php: 5.3 
+      env:
+        - CAKE_REF=2.7.10
     - php: 5.3
       env:
         - DB=pgsql
     - php: 5.3
       env:
         - DB=sqlite
-    - php: 5.3
+    - php: 5.6
       env:
         - COVERALLS=1
-    - php: 5.3
+    - php: 5.6
       env:
         - PHPCS=1
 
